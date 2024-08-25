@@ -3,11 +3,12 @@ from src.DataService import DataService
 
 
 dataFolder = './data'
-ds = DataService(dataFolder)
+outputFolder = './MonsterClean'
+ds = DataService(dataFolder, outputFolder = outputFolder)
 
 for file in os.listdir(dataFolder):
     if not file.endswith('.xml'):
         continue
 
-    ds.cleanXML(fileName = file)
+    ds.generateMonsterList(fileName = file)
     

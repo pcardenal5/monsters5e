@@ -4,7 +4,7 @@ class Action():
     def __init__(self, action : dict) -> None:
         # Jinja setup
         self.environment = Environment(loader = FileSystemLoader('templates/'))
-        self.template = self.environment.get_template('action.md')
+        self.template = self.environment.get_template('actions.md')
 
         self.name = action['name']
         self.text = action['text']
