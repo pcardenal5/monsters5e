@@ -20,4 +20,5 @@ class DataService():
             json.dump(data, outputJSON, indent = 4)
 
         for monster in data:
-            mon = Monster(data = monster)
+            mon = Monster(data = monster, source = fileName)
+

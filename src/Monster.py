@@ -2,7 +2,8 @@ from src.Trait import Trait
 from src.Action import Action
 
 class Monster:
-    def __init__(self, data : dict[str, str]) -> None:
+    def __init__(self, data : dict[str, str], source : str) -> None:
+        self.source = source
         self.name = data['name']
         self.size = data['size']
         self.type = data['type']
@@ -42,19 +43,19 @@ class Monster:
             raise NotImplementedError('Unknown type for the traits') 
         
         if traitType == list:
-            return [Trait(trait) for trait in traits]
+            return [Trait(trait).generateText() for trait in traits]
         elif traitType == dict:
-            return [Trait(traits)]
-    
+            return [Trait(traits).generateText()]
+
     @staticmethod
     def parseActions(actions : list[dict[str,str]] | dict[str,str] | None) -> list[Action]:
         if actions is None:
             return []
-        traitType = type(actions)
-        if traitType not in (list, dict):
+        actionType = type(actions)
+        if actionType not in (list, dict):
             raise NotImplementedError('Unknown type for the actions') 
         
-        if traitType == list:
-            return [Action(trait) for trait in actions]
-        elif traitType == dict:
-            return [Action(actions)]
+        if actionType == list:
+            return [Action(action).generateText() for action in actions]
+        elif actionType == dict:
+            return [Action(actions).generateText()]
