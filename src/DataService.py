@@ -1,0 +1,23 @@
+import json.decoder
+import json.encoder
+import os
+import json
+import xmltodict
+from src.Monster import Monster
+
+class DataService():
+    def __init__(self, dataPath : str) -> None:
+        self.dataPath = dataPath
+
+    def cleanXML(self, fileName: str) -> dict[str,str]:
+        
+        # Open xml file and get the monster list
+        with open(os.path.join(self.dataPath, fileName), 'r') as inputFile:
+            data = xmltodict.parse(inputFile.read())['compendium']['monster']
+        
+        # Save resulting dict to json for easier navigation
+        with open(os.path.join(self.dataPath, fileName.replace('xml', 'json')), 'w') as outputJSON:
+            json.dump(data, outputJSON, indent = 4)
+
+        for monster in data:
+            mon = Monster(data = monster)
