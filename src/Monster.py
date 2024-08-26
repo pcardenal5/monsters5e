@@ -36,7 +36,7 @@ class Monster:
         self.buildResistances()
         
         self.traits = self.parseTraits(data.get('trait'))
-        self.action = self.parseActions(data.get('action'))
+        self.actions = self.parseActions(data.get('action'))
         
         self.spells = data.get('spells')
         self.slots = data.get('slots')
@@ -50,9 +50,9 @@ class Monster:
             raise NotImplementedError('Unknown type for the traits') 
         
         if traitType == list:
-            return [Trait(trait).generateText() for trait in traits]
+            return '\n'.join([Trait(trait).generateText() for trait in traits])
         elif traitType == dict:
-            return [Trait(traits).generateText()]
+            return '\n'.join([Trait(traits).generateText()])
 
     @staticmethod
     def parseActions(actions : list[dict[str,str]] | dict[str,str] | None) -> list[Action]:
@@ -63,9 +63,9 @@ class Monster:
             raise NotImplementedError('Unknown type for the actions') 
         
         if actionType == list:
-            return [Action(action).generateText() for action in actions]
+            return '\n\n'.join([Action(action).generateText() for action in actions])
         elif actionType == dict:
-            return [Action(actions).generateText()]
+            return '\n\n'.join([Action(actions).generateText()])
 
     def buildResistances(self):
         self.resistances = ''
@@ -77,7 +77,7 @@ class Monster:
         if self.immune is not None:
             self.resistances += '**Damage Immunities**: ' + self.immune + '\n\n'
         if self.conditionImmune is not None:
-            self.resistances += '**Condition Immunities**' + self.conditionImmune + '\n\n'
+            self.resistances += '**Condition Immunities**: ' + self.conditionImmune + '\n\n'
     
     def generateText(self) -> str:
         return self.template.render(self.__dict__)

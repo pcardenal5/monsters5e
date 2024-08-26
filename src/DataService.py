@@ -22,7 +22,7 @@ class DataService():
 
         for monster in data:
             mon = Monster(data = monster, source = fileName.replace('.xml', '').replace('Bestiary', ''))
-            outputFolder = os.path.join(self.outputFolder, mon.cr)
+            outputFolder = os.path.join(self.outputFolder, mon.cr.replace('/', '-').replace('l','1').replace('00','0'))
             if not os.path.exists(outputFolder):
                 os.makedirs(outputFolder)
 

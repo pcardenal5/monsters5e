@@ -23,11 +23,11 @@ class Trait():
 
     def parseText(self) -> str:
         if type(self.text) == list:
-            self.text = '\n\n'.join([t for t in self.text if t is not None])
+            self.text = ''.join([t for t in self.text if t is not None])
 
     def parseAttack(self) -> str:
         if type(self.attack) == list:
-            self.attack = '\n\n'.join([t for t in self.attack if t is not None])
+            self.attack = ''.join([t for t in self.attack if t is not None])
 
     def generateText(self) -> str:
         return self.template.render(self.__dict__)
