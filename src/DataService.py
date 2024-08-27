@@ -25,5 +25,5 @@ class DataService():
             if not os.path.exists(outputFolder):
                 os.makedirs(outputFolder)
 
-            with open(os.path.join(outputFolder, mon.name.replace('/','-')) + '.md', 'w') as outputFile:
+            with open(os.path.join(outputFolder, mon.name) + '.md', 'w') as outputFile:
                 outputFile.write(mon.generateText())

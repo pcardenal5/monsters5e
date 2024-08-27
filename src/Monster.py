@@ -7,21 +7,22 @@ class Monster:
     def __init__(self, data : dict[str, str], source : str) -> None:
         self.environment = Environment(loader = FileSystemLoader('templates/'))
         self.template = self.environment.get_template('monster.md')
-
+        
+        self.data = data
         self.source = source
-        self.name = data['name']
-        self.size = data['size']
-        self.type = data['type']
-        self.cr = data['cr']
-        self.alignment = data['alignment']
-        self.ac = data['ac']
-        self.hp = data['hp']
-        self.str = int(data['str'])
-        self.dex = int(data['dex'])
-        self.con = int(data['con'])
-        self.int = int(data['int'])
-        self.wis = int(data['wis'])
-        self.cha = int(data['cha'])
+        self.name = self.data['name'].replace('/','-')
+        self.size = self.data['size']
+        self.type = self.data['type']
+        self.cr = self.data['cr']
+        self.alignment = self.data['alignment']
+        self.ac = self.data['ac']
+        self.hp = self.data['hp']
+        self.str = int(self.data['str'])
+        self.dex = int(self.data['dex'])
+        self.con = int(self.data['con'])
+        self.int = int(self.data['int'])
+        self.wis = int(self.data['wis'])
+        self.cha = int(self.data['cha'])
 
         self.strMod = self.calculateModifier(self.str)
         self.dexMod = self.calculateModifier(self.dex)
@@ -30,7 +31,7 @@ class Monster:
         self.wisMod = self.calculateModifier(self.wis)
         self.chaMod = self.calculateModifier(self.cha)
 
-        self.saves = data.get('save', '')
+        self.saves = self.data.get('save', '')
 
         self.strSave = self.getSave('str')
         self.dexSave = self.getSave('dex')
@@ -39,29 +40,25 @@ class Monster:
         self.wisSave = self.getSave('wis')
         self.chaSave = self.getSave('cha')
 
-        self.speed = data['speed']
-        self.skill = data.get('skill', '')
-        self.passive = data.get('passive', '') # Passive perception
-        self.senses = data.get('senses', '')
-        self.languages = data.get('languages', '')
+        self.speed = self.data['speed']
+        self.skill = self.data.get('skill', '')
+        self.senses = self.data.get('senses', '')
+        self.languages = self.data.get('languages', '')
         
-        self.resist = data.get('resist', '')
-        self.vulnerable = data.get('vulnerable', '')
-        self.immune = data.get('immune', '')
-        self.conditionImmune = data.get('conditionImmune', '')
+        self.resist = self.data.get('resist', '')
+        self.vulnerable = self.data.get('vulnerable', '')
+        self.immune = self.data.get('immune', '')
+        self.conditionImmune = self.data.get('conditionImmune', '')
         self.buildResistances()
         
-        self.traits = self.parseActionTraits(data.get('trait'))
-        self.actions = self.parseActionTraits(data.get('action'))
-        self.legendary = self.parseActionTraits(data.get('legendary'))
+        self.traits = self.parseActionTraits('trait')
+        self.actions = self.parseActionTraits('action')
+        self.legendary = self.parseActionTraits('legendary')
 
         self.buildActionTraits()
 
-        self.spells = data.get('spells')
-        self.slots = data.get('slots')
-    
-    @staticmethod
-    def parseActionTraits(actionTrait : list[dict[str,str]] | dict[str,str]) -> list[ActionTrait]:
+    def parseActionTraits(self, actionTraitType : str) -> list[ActionTrait]:
+        actionTrait = self.data.get(actionTraitType)
         if actionTrait is None:
             return ''
         traitType = type(actionTrait)
@@ -69,9 +66,9 @@ class Monster:
             raise NotImplementedError('Type not supported') 
         
         if traitType == list:
-            return '\n'.join([ActionTrait(trait).generateText() for trait in actionTrait])
+            return '\n'.join([ActionTrait(trait, self.name, self.environment, actionTraitType).completeText for trait in actionTrait])
         elif traitType == dict:
-            return '\n'.join([ActionTrait(actionTrait).generateText()])
+            return '\n'.join([ActionTrait(actionTrait, self.name, self.environment, actionTraitType).completeText])
 
     def buildResistances(self) -> None:
         self.resistances = ''
