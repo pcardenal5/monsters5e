@@ -14,15 +14,15 @@ Source: {{source}}
 |  AC  | {{ac}} |
 |  HP  | {{hp}} |
 
-| STR     | DEX      |  CON     | INT      | WIS     | CHA     |
-|:------: | :------: | :------: | :------: |:------: | :-----: |
-| {{str}} | {{dex}}  |  {{con}} | {{int}}  | {{wis}} | {{cha}} |
+|Stat | STR | DEX | CON | INT | WIS | CHA |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|Value|{{str}}|{{dex}}|{{con}}|{{int}}|{{wis}}|{{cha}}|
+| Mod |{{strMod}}|{{dexMod}}|{{conMod}}|{{intMod}}|{{wisMod}}|{{chaMod}}|
+| Save |{{strSave}}|{{dexSave}}|{{conSave}}|{{intSave}}|{{wisSave}}|{{chaSave}}|
 
 **Speed**: {{speed}}
 
-**Saves**: {{save}}
-
-**Skills**: {{skill}}, passive perception {{passive}}
+**Skills**: {{skill}}
 
 **Senses**: {{senses}}
 
@@ -32,6 +32,7 @@ Source: {{source}}
 ## Traits
 
 {{traits}}
+
 ## Actions
 
 {{actions}}
