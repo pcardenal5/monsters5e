@@ -29,10 +29,4 @@ Source: {{source}}
 **Languages**: {{languages}}
 
 {{resistances}}
-## Traits
-
-{{traits}}
-
-## Actions
-
-{{actions}}
+{{actionTraits}}

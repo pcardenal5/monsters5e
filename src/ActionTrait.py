@@ -1,14 +1,16 @@
 from jinja2 import Environment, FileSystemLoader
 
 class ActionTrait():
-    def __init__(self, action : dict) -> None:
+    def __init__(self, actionTrait : dict) -> None:
         # Jinja setup
         self.environment = Environment(loader = FileSystemLoader('templates/'))
         self.template = self.environment.get_template('ActionTrait.md')
 
-        self.name = action['name']
-        self.text = action['text']
-        self.attack = action.get('attack', '')
+        self.name = actionTrait['name']
+        if self.name is None:
+            self.name = 'Legendary Action'
+        self.text = actionTrait['text']
+        self.attack = actionTrait.get('attack', '')
         self.parseText()
         self.parseAttack()
 

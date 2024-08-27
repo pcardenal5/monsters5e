@@ -53,7 +53,10 @@ class Monster:
         
         self.traits = self.parseActionTraits(data.get('trait'))
         self.actions = self.parseActionTraits(data.get('action'))
-        
+        self.legendary = self.parseActionTraits(data.get('legendary'))
+
+        self.buildActionTraits()
+
         self.spells = data.get('spells')
         self.slots = data.get('slots')
     
@@ -70,7 +73,7 @@ class Monster:
         elif traitType == dict:
             return '\n'.join([ActionTrait(actionTrait).generateText()])
 
-    def buildResistances(self):
+    def buildResistances(self) -> None:
         self.resistances = ''
 
         if self.resist != '':
@@ -82,9 +85,18 @@ class Monster:
         if self.conditionImmune != '':
             self.resistances += '**Condition Immunities**: ' + self.conditionImmune + '\n\n'
 
+    def buildActionTraits(self) -> None:
+        self.actionTraits = ''
+        if self.traits != '':
+            self.actionTraits += f'## Traits\n\n{self.traits}\n\n'
+        if self.actions != '':
+            self.actionTraits += f'## Actions\n\n{self.actions}\n\n'
+        if self.legendary != '':
+            self.actionTraits += f'## Legendary Actions\n\n{self.legendary}\n\n'
+
+
     def generateText(self) -> str:
         return self.template.render(self.__dict__)
-
 
     @staticmethod
     def calculateModifier(stat: int) -> int:
