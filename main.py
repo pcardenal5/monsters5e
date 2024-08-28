@@ -11,3 +11,4 @@ for file in os.listdir(dataFolder):
         continue
 
     ds.generateMonsterList(fileName = file)
+    print(f'Finished with {file}')
