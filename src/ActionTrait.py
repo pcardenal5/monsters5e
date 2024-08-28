@@ -38,7 +38,14 @@ class ActionTrait():
     def saveTrait(self) -> str:
         cleanName = self.name.replace('/', ' per ').replace('\\', ' per ')
         fileName = f'{cleanName}.md'
-        traitTextClean = self.completeText.replace(f'{self.monsterName}', 'the creature').replace(' the the ', ' the ')
+        traitTextClean = (
+            self.completeText
+            .replace(f'{self.monsterName}', 'The creature')
+            .replace(f'{self.monsterName.lower()}', 'The creature')
+            .replace(f'{self.monsterName.split(' ')[-1].lower()}', 'the creature')
+            .replace(' the the ', ' the ')
+            .replace('The the ', 'The ')
+        )
 
         if os.path.exists('./MonsterClean/Traits/' + fileName):
             with open('./MonsterClean/Traits/' + fileName, 'r') as inputFile:
