@@ -20,7 +20,7 @@ class ActionTrait():
         self.completeText = self.generateText()
 
         # Make wikilinks only to traits
-        if self.actionTraitType == 'trait':
+        if (self.actionTraitType == 'trait') and (not self.name.__contains__('Spellcasting')):
             self.saveTrait()
 
     def parseText(self) -> str:
