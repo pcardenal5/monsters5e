@@ -1,12 +1,12 @@
 ---
 Type: {{type}}
+AdditionaType: {{additionalType}}
 Alignment: {{alignment}}
 CR: {{cr}}
 Source: {{source}}
+Size: {{size}}
 ---
 # {{name}}
-
-{{size}}, {{type}}, {{alignment}}
 
 | Name | Value  |
 | :---:| :----: |

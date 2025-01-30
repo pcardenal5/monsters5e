@@ -12,7 +12,12 @@ class ActionTrait():
         self.name = actionTrait['name']
         if self.name is None:
             self.name = 'Legendary Action'
-        self.text = actionTrait['text']
+        if actionTrait.get('text') is not None:
+            self.text = actionTrait['text']
+        if actionTrait.get('entries') is not None:
+            self.text = self.parseActionEntries(actionTrait['entries'])
+
+
         self.attack = actionTrait.get('attack', '')
         self.parseText()
         self.parseAttack()
@@ -23,19 +28,36 @@ class ActionTrait():
         if (self.actionTraitType == 'trait') and (not self.name.__contains__('Spellcasting')):
             self.saveTrait()
 
-    def parseText(self) -> str:
+    def parseText(self) -> None:
         if type(self.text) == list:
             self.text = '\n'.join([t for t in self.text if t is not None])
         self.text.replace('•', '- ')
 
-    def parseAttack(self) -> str:
+    @staticmethod
+    def parseActionEntries(actionTrait: list) -> str:
+        actionText = ''
+        for item in actionTrait:
+            if isinstance(item, str):
+                actionText += item
+                continue
+            
+            if isinstance(item, dict):
+                for element in item['items']:
+                    try:
+                        actionText += f'**{element['name']}** : {element['entry']}'
+                    except Exception as e:
+                        actionText += f'**{element['name']}** : {element['entries']}'
+
+        return actionText
+
+    def parseAttack(self) -> None:
         if type(self.attack) == list:
             self.attack = '\n'.join([t for t in self.attack if t is not None])
         self.attack.replace('•', '- ')
         if self.attack != '':
             self.attack = f'\n{self.attack}\n'
 
-    def saveTrait(self) -> str:
+    def saveTrait(self) -> None:
         cleanName = self.name.replace('/', ' per ').replace('\\', ' per ')
         fileName = f'{cleanName}.md'
         traitTextClean = (
@@ -47,8 +69,8 @@ class ActionTrait():
             .replace('The the ', 'The ')
         )
 
-        if os.path.exists('./MonsterClean/Traits/' + fileName):
-            with open('./MonsterClean/Traits/' + fileName, 'r') as inputFile:
+        if os.path.exists('./5etools/Traits/' + fileName):
+            with open('./5etools/Traits/' + fileName, 'r') as inputFile:
                 text = ''.join(inputFile.readlines())
 
             if traitTextClean == text:
@@ -57,7 +79,7 @@ class ActionTrait():
             # Save contents to new file
             fileName = f'{cleanName}_{self.monsterName}.md'
 
-        with open('./MonsterClean/Traits/' + fileName, 'w') as outputFile:
+        with open('./5etools/Traits/' + fileName, 'w') as outputFile:
             outputFile.write(traitTextClean)
         
         self.completeText = f'![[{fileName.replace('.md','')}]]'

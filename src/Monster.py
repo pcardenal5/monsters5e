@@ -57,7 +57,7 @@ class Monster:
 
         self.buildActionTraits()
 
-    def parseActionTraits(self, actionTraitType : str) -> list[ActionTrait]:
+    def parseActionTraits(self, actionTraitType : str) -> str:
         actionTrait = self.data.get(actionTraitType)
         if actionTrait is None:
             return ''
@@ -66,9 +66,9 @@ class Monster:
             raise NotImplementedError('Type not supported') 
         
         if traitType == list:
-            return '\n'.join([ActionTrait(trait, self.name, self.environment, actionTraitType).completeText for trait in actionTrait])
-        elif traitType == dict:
-            return '\n'.join([ActionTrait(actionTrait, self.name, self.environment, actionTraitType).completeText])
+            return '\n'.join([ActionTrait(trait, self.name, self.environment, actionTraitType).completeText for trait in actionTrait]) # type: ignore
+        
+        return '\n'.join([ActionTrait(actionTrait, self.name, self.environment, actionTraitType).completeText])# type: ignore
 
     def buildResistances(self) -> None:
         self.resistances = ''
