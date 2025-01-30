@@ -1,14 +1,9 @@
 import os
 from src.DataService import DataService
+from src.ModeEnum import ModeEnum
 
 
-dataFolder = './data'
+dataPath = './data'
 outputFolder = './MonsterClean'
-ds = DataService(dataFolder, outputFolder = outputFolder)
-
-for file in os.listdir(dataFolder):
-    if not file.endswith('.xml'):
-        continue
-
-    ds.generateMonsterList(fileName = file)
-    print(f'Finished with {file}')
+ds = DataService(dataPath, outputFolder = outputFolder, mode = ModeEnum.XML)
+ds.generateMonsterList()
