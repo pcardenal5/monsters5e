@@ -8,7 +8,9 @@ class ToolsMonsterParser:
         self.outputFolder = outputFolder
 
     def generateMonsterList(self) -> None:
-        for file in os.listdir(self.dataPath):
+        fileList = os.listdir(self.dataPath)
+        fileList.sort()
+        for file in fileList:
             if not file.startswith('bestiary'):
                 continue
             print(file)
@@ -21,10 +23,12 @@ class ToolsMonsterParser:
                 # TODO: consider "Edge" case 
                 if monster.get('_copy') is not None:
                     continue
-                monsterData = self.adaptToMonster(monster)
-
-                mon = Monster(data = monsterData, source = monsterData['source'])
-
+                try:
+                    monsterData = self.adaptToMonster(monster)
+                    mon = Monster(data = monsterData, source = monsterData['source'])
+                except Exception as e:
+                    print(monster)
+                    continue
                 outputFolder = os.path.join(self.outputFolder, mon.cr.replace('/', '-').replace('l','1').replace('00','0'))
                 if not os.path.exists(outputFolder):
                     os.makedirs(outputFolder)
@@ -49,6 +53,7 @@ class ToolsMonsterParser:
         data['immune'] = self.parseConditions(data.get('immune'), 'immune')
         data['vulnerable'] = self.parseConditions(data.get('vulnerable'), 'vulnerable')
         data['cr'], data['lairCr'] = self.parseCR(data.get('cr'))
+        data['ac'] = self.parseAC(data.get('ac'))
 
         return data
 
@@ -143,17 +148,19 @@ class ToolsMonsterParser:
 
 
     @staticmethod
-    def parseAC(ac: list) -> str:
+    def parseAC(ac: list | None) -> str:
+        if ac is None:
+            return 'None'
         acStr = ''
-        if isinstance(ac[0], int):
-            acStr += str(ac[0])
-            if len(ac) == 1:
-                return acStr 
-            ac = ac[1:]
-
-        if isinstance(ac[0], dict):
-            acStr += f'{ac[0]['ac']} {','.join(ac[0]['from'])}'
-
+        for element in ac:
+            if isinstance(element, int):
+                acStr += str(element)
+                if len(ac) == 1:
+                    return acStr 
+                
+            if isinstance(element, dict):
+                for key, value in element.items():
+                    acStr += f'{key} {value}'
 
         return acStr
 
@@ -175,28 +182,34 @@ class ToolsMonsterParser:
         return ', '.join([f'{key}, {value}' for key, value in save.items()])
 
 
-    @staticmethod
-    def parseConditions(conditionList: list | None, conditionName: str):
+    @classmethod
+    def parseConditions(cls, conditionList: list | None, conditionName: str) -> str:
         if conditionList is None:
             return 'None'
 
-        resistStr = ''
+        conditionStr = ''
         for item in conditionList:
-            if isinstance(item, str):
-                resistStr += item
-                continue
+            conditionStr += cls.parseConditionElement(item, conditionName)
 
-            if isinstance(item, dict):
-                if item.get('preNote'):
-                    resistStr += f'{item.get('preNote')}'
-                resistStr += ', '.join([i.title() for i in item[conditionName]]) # TODO: Add recursivity
-                if item.get('note'):
-                    resistStr += f'{item.get('note')}'
-                
-                continue
+        return conditionStr
 
-        return resistStr
+    @classmethod
+    def parseConditionElement(cls, conditionitem, conditionName: str) -> str:
+        conditionStr = ''
+        if isinstance(conditionitem, str):
+            return str(conditionitem)
 
+        if isinstance(conditionitem, dict):
+            if conditionitem.get('special'):
+                return f'{conditionitem.get('special')}'
+            if conditionitem.get('preNote'):
+                conditionStr += f'{conditionitem.get('preNote')}'
+            conditionStr += ', '.join([cls.parseConditionElement(i, conditionName) for i in conditionitem[conditionName]]) 
+            if conditionitem.get('note'):
+                conditionStr += f'{conditionitem.get('note')}'
+            return conditionStr
+
+        raise TypeError(f'Contition data type not considered ({type(conditionitem)}): {conditionitem}')
 
     @staticmethod
     def parseCR(cr : str | dict | None) -> tuple[str, str]:
@@ -204,7 +217,10 @@ class ToolsMonsterParser:
             return 'None', 'None'
 
         if isinstance(cr, str):
-            return 'cr', 'None'
+            return cr, 'None'
 
         if isinstance(cr, dict):
-            return cr['cr'], cr['lair']
+            if cr.get('lair'):
+                return cr['cr'], cr['lair']
+            else:
+                return cr['cr'], 'None'

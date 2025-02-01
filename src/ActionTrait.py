@@ -8,15 +8,16 @@ class ActionTrait():
         self.template = self.environment.get_template('ActionTrait.md')
         self.actionTraitType = actionTraitType
         self.monsterName = monsterName
-
-        self.name = actionTrait['name']
-        if self.name is None:
-            self.name = 'Legendary Action'
-        if actionTrait.get('text') is not None:
+        self.name = actionTrait.get('name', '')
+        if self.name == '':
+            print(f'{self.monsterName} has a trait with no name')
+        if actionTrait.get('text'):
             self.text = actionTrait['text']
-        if actionTrait.get('entries') is not None:
+        elif actionTrait.get('entries') is not None:
             self.text = self.parseActionEntries(actionTrait['entries'])
-
+        else:
+            self.text = ''
+            print(f'{self.monsterName} has a trait with no text')
 
         self.attack = actionTrait.get('attack', '')
         self.parseText()
@@ -33,22 +34,36 @@ class ActionTrait():
             self.text = '\n'.join([t for t in self.text if t is not None])
         self.text.replace('•', '- ')
 
-    @staticmethod
-    def parseActionEntries(actionTrait: list) -> str:
+
+    def parseActionEntries(self, actionTraitList: list) -> str:
         actionText = ''
-        for item in actionTrait:
-            if isinstance(item, str):
-                actionText += item
-                continue
-            
-            if isinstance(item, dict):
-                for element in item['items']:
+        for item in actionTraitList:
+            actionText += self.parseActionEntryElement(item)
+        return actionText
+
+
+    def parseActionEntryElement(self, actionTrait) -> str:
+        if isinstance(actionTrait, str):
+            return actionTrait
+
+        actionText = ''        
+        if isinstance(actionTrait, dict):
+            if not actionTrait.get('items'):
+                return ActionTrait(actionTrait, self.monsterName,environment = self.environment, actionTraitType = self.actionTraitType).completeText
+
+
+            for element in actionTrait['items']:
+                if isinstance(element, dict):
                     try:
                         actionText += f'**{element['name']}** : {element['entry']}'
                     except Exception as e:
                         actionText += f'**{element['name']}** : {element['entries']}'
+                if isinstance(element, str):
+                    actionText += f'{element}'
 
-        return actionText
+            return actionText
+
+        raise TypeError(f'ActionEntryElement not supported({type(actionTrait)}): {actionTrait}')
 
     def parseAttack(self) -> None:
         if type(self.attack) == list:
