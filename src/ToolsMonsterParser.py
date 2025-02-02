@@ -363,9 +363,14 @@ class ToolsMonsterParser:
 
         s = '. '.join(i.strip().capitalize() for i in s.split('. '))
 
-        # TODO: sanitize better strings like [[restrained|xphb]] 
         s = re.sub(r'\{@spell (.+?)\}', r'[[\1]]', s)
-        s = re.sub(r'\{@item (.+?)\}', r'[[\1]]', s)
+        # Items need to be treated differently because they often
+        #  come in the form {@item itemName|book|otherName}
+        res = re.compile(r'\{@item (.+?)\}').search(s)
+        if res:
+            itemName = res.group(1).split('|')[0]
+            s = re.sub(r'\{@item (.+?)\}', f'[[{itemName}]]', s)
+
         s = re.sub(r'\{@condition (.+?)\}', r'[[\1]]', s)
         s = re.sub(r'\{@status (.+?)\}', r'[[\1]]', s)
 
