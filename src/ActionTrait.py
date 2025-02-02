@@ -1,11 +1,16 @@
 from jinja2 import Environment
 import os
+import re
 
 class ActionTrait():
-    def __init__(self, actionTrait : dict, monsterName: str, environment : Environment, actionTraitType: str) -> None:
+    def __init__(self, actionTrait : dict, monsterName: str, environment : Environment, actionTraitType: str, outputFolder : str) -> None:
         # Jinja setup
         self.environment = environment
         self.template = self.environment.get_template('ActionTrait.md')
+
+        self.mainOutputFolder = outputFolder
+        self.outputFolder = os.path.join(self.mainOutputFolder, 'Traits')
+
         self.actionTraitType = actionTraitType
         self.monsterName = monsterName
         self.name = actionTrait.get('name', '')
@@ -49,7 +54,13 @@ class ActionTrait():
         actionText = ''        
         if isinstance(actionTrait, dict):
             if not actionTrait.get('items'):
-                return ActionTrait(actionTrait, self.monsterName,environment = self.environment, actionTraitType = self.actionTraitType).completeText
+                return ActionTrait(
+                    actionTrait, 
+                    self.monsterName,
+                    environment = self.environment, 
+                    actionTraitType = self.actionTraitType, 
+                    outputFolder = self.mainOutputFolder
+                ).completeText
 
 
             for element in actionTrait['items']:
@@ -75,17 +86,17 @@ class ActionTrait():
     def saveTrait(self) -> None:
         cleanName = self.name.replace('/', ' per ').replace('\\', ' per ')
         fileName = f'{cleanName}.md'
-        traitTextClean = (
-            self.completeText
-            .replace(f'{self.monsterName}', 'The creature')
-            .replace(f'{self.monsterName.lower()}', 'The creature')
-            .replace(f'{self.monsterName.split(' ')[-1].lower()}', 'the creature')
-            .replace(' the the ', ' the ')
-            .replace('The the ', 'The ')
-        )
+        # TODO: move to parseText
+        traitTextClean = self.text.replace('ft.', 'ft')
+        traitTextClean = re.sub(re.escape(self.monsterName), 'the creature', traitTextClean, flags = re.IGNORECASE)
+        traitTextClean = re.sub(re.escape(self.monsterName.split(' ')[-1]), 'the creature', traitTextClean, flags = re.IGNORECASE)
+        traitTextClean = re.sub(re.escape(self.monsterName.split(' ')[0]), 'the creature', traitTextClean, flags = re.IGNORECASE)
+        traitTextClean = traitTextClean.replace(' the the ', ' the ').replace('The the ', 'The ')
+        traitTextClean = '.'.join('\n'.join(k.capitalize() for k in i.split('\n')).capitalize() for i in traitTextClean.split('.'))
 
-        if os.path.exists('./5etools/Traits/' + fileName):
-            with open('./5etools/Traits/' + fileName, 'r') as inputFile:
+        self.completeText = self.generateText()
+        if os.path.exists(os.path.join(self.outputFolder,fileName)):
+            with open(os.path.join(self.outputFolder,fileName), 'r') as inputFile:
                 text = ''.join(inputFile.readlines())
 
             if traitTextClean == text:
@@ -94,7 +105,7 @@ class ActionTrait():
             # Save contents to new file
             fileName = f'{cleanName}_{self.monsterName}.md'
 
-        with open('./5etools/Traits/' + fileName, 'w') as outputFile:
+        with open(os.path.join(self.outputFolder, fileName), 'w') as outputFile:
             outputFile.write(traitTextClean)
         
         self.completeText = f'![[{fileName.replace('.md','')}]]'
