@@ -1,6 +1,8 @@
 ---
+Name: {{name}}
+Alias: {{alias}}
 Type: {{type}}
-AdditionaType: {{additionalType}}
+AdditionalType: {{additionalType}}
 Alignment: {{alignment}}
 CR: {{cr}}
 Source: {{source}}

@@ -6,6 +6,9 @@ class ToolsMonsterParser:
     def __init__(self, dataPath : str, outputFolder : str) -> None:
         self.dataPath = dataPath
         self.outputFolder = outputFolder
+        if not os.path.exists(self.outputFolder):
+            os.mkdir(self.outputFolder)
+            os.mkdir(os.path.join(self.outputFolder, 'Traits'))
 
     def generateMonsterList(self) -> None:
         fileList = os.listdir(self.dataPath)
@@ -25,10 +28,10 @@ class ToolsMonsterParser:
                     continue
                 try:
                     monsterData = self.adaptToMonster(monster)
-                    mon = Monster(data = monsterData, source = monsterData['source'])
+                    mon = Monster(data = monsterData, source = monsterData['source'], outputFolder = self.outputFolder)
                 except Exception as e:
-                    print(monster)
-                    continue
+                    
+                    raise e
                 outputFolder = os.path.join(self.outputFolder, mon.cr.replace('/', '-').replace('l','1').replace('00','0'))
                 if not os.path.exists(outputFolder):
                     os.makedirs(outputFolder)
@@ -43,7 +46,8 @@ class ToolsMonsterParser:
         # Thus, we only change the values that actually
         # need to change
 
-        data['size'] = [self.parseSize(i) for i in data.get('size', [])]
+        data['size'] = ','.join([self.parseSize(i) for i in data.get('size', [])])
+        data['alias'] = ','.join([i for i in data.get('alias', [])])
         data['type'], data['additionalType'] = self.parseTypes(data.get('type'))
         data['alignment'] = self.parseAlignment(data.get('alignment'))
         data['hp'] = self.parseHP(data.get('hp'))
@@ -54,6 +58,7 @@ class ToolsMonsterParser:
         data['vulnerable'] = self.parseConditions(data.get('vulnerable'), 'vulnerable')
         data['cr'], data['lairCr'] = self.parseCR(data.get('cr'))
         data['ac'] = self.parseAC(data.get('ac'))
+        data['senses'] = self.parseSenses(data.get('senses'))
 
         return data
 
@@ -83,7 +88,8 @@ class ToolsMonsterParser:
                 raise LookupError(f'Size not supported: {size}')
 
 
-    def parseTypes(self, type: str | dict | None) -> tuple[str,str]:
+    @classmethod
+    def parseTypes(cls, type: str | dict | None) -> tuple[str,str]:
         if type is None:
             return 'None', 'None'
 
@@ -104,7 +110,7 @@ class ToolsMonsterParser:
                         subtype = ''
                         raise ValueError(f'Type tags has not been considered: {tag}')
             elif type.get('swarmSize') is not None:
-                subtype = ','.join([self.parseSize(i) for i in  type['swarmSize']])
+                subtype = ','.join([cls.parseSize(i) for i in  type['swarmSize']])
             else:
                 subtype = 'None'
 
@@ -160,7 +166,11 @@ class ToolsMonsterParser:
                 
             if isinstance(element, dict):
                 for key, value in element.items():
-                    acStr += f'{key} {value}'
+                    if key == 'ac':
+                        acStr += f'{key}'
+                    else:
+                        acStr += f' {key} {value}'
+                        acStr.strip()
 
         return acStr
 
@@ -189,12 +199,15 @@ class ToolsMonsterParser:
 
         conditionStr = ''
         for item in conditionList:
-            conditionStr += cls.parseConditionElement(item, conditionName)
+            conditionStr += cls.parseConditionElement(item, conditionName) + ' '
+
+        conditionStr = conditionStr.strip()
 
         return conditionStr
 
     @classmethod
     def parseConditionElement(cls, conditionitem, conditionName: str) -> str:
+
         conditionStr = ''
         if isinstance(conditionitem, str):
             return str(conditionitem)
@@ -224,3 +237,17 @@ class ToolsMonsterParser:
                 return cr['cr'], cr['lair']
             else:
                 return cr['cr'], 'None'
+
+
+    @staticmethod
+    def parseSenses(senses : str | list | None) -> str:
+        if senses is None:
+            return ''
+
+        if isinstance(senses, str):
+            return senses
+
+        if isinstance(senses, list):
+            return ', '.join(senses)
+
+        raise TypeError(f'Senses type not considered {type(senses)}: {senses}')

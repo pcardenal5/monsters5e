@@ -25,7 +25,7 @@ class XmlMonsterParser:
 
             for monster in data:
                 monster = {key:val for key, val in monster.items() if val is not None}
-                mon = Monster(data = monster, source = file.replace('.xml', '').replace('Bestiary', ''))
+                mon = Monster(data = monster, source = file.replace('.xml', '').replace('Bestiary', ''), outputFolder = self.outputFolder)
                 outputFolder = os.path.join(self.outputFolder, mon.cr.replace('/', '-').replace('l','1').replace('00','0'))
                 if not os.path.exists(outputFolder):
                     os.makedirs(outputFolder)

@@ -2,12 +2,13 @@ from src.ActionTrait import ActionTrait
 from jinja2 import Environment, FileSystemLoader
 from math import floor
 import re
+import os
 
 class Monster:
-    def __init__(self, data : dict[str, str], source : str) -> None:
+    def __init__(self, data : dict[str, str], source : str, outputFolder : str) -> None:
         self.environment = Environment(loader = FileSystemLoader('templates/'))
         self.template = self.environment.get_template('monster.md')
-        
+
         self.data = data
         self.source = source
         self.name = self.data['name'].replace('/','-')
@@ -17,12 +18,12 @@ class Monster:
         self.alignment = self.data['alignment']
         self.ac = self.data['ac']
         self.hp = self.data['hp']
-        self.str = int(self.data['str'])
-        self.dex = int(self.data['dex'])
-        self.con = int(self.data['con'])
-        self.int = int(self.data['int'])
-        self.wis = int(self.data['wis'])
-        self.cha = int(self.data['cha'])
+        self.str = int(self.data.get('str', 0))
+        self.dex = int(self.data.get('dex', 0))
+        self.con = int(self.data.get('con', 0))
+        self.int = int(self.data.get('int', 0))
+        self.wis = int(self.data.get('wis', 0))
+        self.cha = int(self.data.get('cha', 0))
 
         self.strMod = self.calculateModifier(self.str)
         self.dexMod = self.calculateModifier(self.dex)
@@ -40,17 +41,24 @@ class Monster:
         self.wisSave = self.getSave('wis')
         self.chaSave = self.getSave('cha')
 
-        self.speed = self.data['speed']
+        self.speed = self.data.get('speed', 0)
         self.skill = self.data.get('skill', '')
         self.senses = self.data.get('senses', '')
         self.languages = self.data.get('languages', '')
-        
+
         self.resist = self.data.get('resist', '')
         self.vulnerable = self.data.get('vulnerable', '')
         self.immune = self.data.get('immune', '')
         self.conditionImmune = self.data.get('conditionImmune', '')
         self.buildResistances()
-        
+
+
+        self.outputFolder = outputFolder
+        self.monsterOutputFolder = os.path.join(self.outputFolder, self.cr.replace('/', '-').replace('l','1').replace('00','0'))
+        self.completeOutputPath = os.path.join(self.monsterOutputFolder, self.name) + '.md',
+        if not os.path.exists(self.monsterOutputFolder):
+            os.makedirs(self.monsterOutputFolder)
+
         self.traits = self.parseActionTraits('trait')
         self.actions = self.parseActionTraits('action')
         self.legendary = self.parseActionTraits('legendary')
@@ -66,9 +74,9 @@ class Monster:
             raise NotImplementedError('Type not supported') 
         
         if traitType == list:
-            return '\n'.join([ActionTrait(trait, self.name, self.environment, actionTraitType).completeText for trait in actionTrait]) # type: ignore
+            return '\n'.join([ActionTrait(trait, self.name, self.environment, actionTraitType, self.outputFolder).completeText for trait in actionTrait]) # type: ignore
         
-        return '\n'.join([ActionTrait(actionTrait, self.name, self.environment, actionTraitType).completeText])# type: ignore
+        return '\n'.join([ActionTrait(actionTrait, self.name, self.environment, actionTraitType, self.outputFolder).completeText])# type: ignore
 
     def buildResistances(self) -> None:
         self.resistances = ''
