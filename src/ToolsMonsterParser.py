@@ -1,6 +1,7 @@
 import os
 import json
 from src.Monster import Monster
+import re
 
 class ToolsMonsterParser:
     def __init__(self, dataPath : str, outputFolder : str) -> None:
@@ -26,8 +27,9 @@ class ToolsMonsterParser:
                 # TODO: consider "Edge" case 
                 if monster.get('_copy') is not None:
                     continue
+                monster = self.sanitizeData(monster)
                 try:
-                    monsterData = self.adaptToMonster(monster)
+                    monsterData = self.adaptToMonster(monster) # type:ignore
                     mon = Monster(data = monsterData, source = monsterData['source'], outputFolder = self.outputFolder)
                 except Exception as e:
                     
@@ -61,6 +63,7 @@ class ToolsMonsterParser:
         data['senses'] = self.parseSenses(data.get('senses'))
         data['speed'] = self.parseSpeed(data.get('speed'))
         data['skill'] = self.parseSkills(data.get('skill'))
+        data['languages'] = self.parseLanguages(data.get('languages'))
 
         return data
 
@@ -292,3 +295,90 @@ class ToolsMonsterParser:
             return skillsStr.strip()
 
         raise TypeError(f'Type of skills not considered {type(skills)}: {skills}')
+
+
+    @staticmethod
+    def parseLanguages(language: list | str | None) -> str:
+        if language is None:
+            return ''
+        
+        if isinstance(language, str):
+            return language
+        
+        if isinstance(language, list):
+            return ', '.join(language)
+
+        raise TypeError(f'Type of language not considered {type(language)}: {language}')
+
+
+
+    @classmethod
+    def sanitizeData(cls, data : dict | str)-> dict | str:
+        '''
+        Removes "{...}" from all the keys of the input dict,
+        replacing them with hyperlinks wherever they actually matter.
+        This repalcement is done on the `sanitizeString` function
+        '''
+        if not isinstance(data, dict):
+            return cls.sanitizeString(data)
+
+        for key, value in data.items():
+            if isinstance(value, str):
+                data[key] = cls.sanitizeString(value)
+                continue
+
+            if isinstance(value, list):
+                data[key] = [cls.sanitizeData(i) for i in value]
+                continue
+
+            if isinstance(value, dict):
+                data[key] = cls.sanitizeData(value)
+                continue
+
+        return data
+
+
+    @staticmethod
+    def sanitizeString(s0: str) -> str:
+        if not isinstance(s0, str):
+            return s0
+
+        s = s0.replace('ft.', 'ft')
+
+        s = re.sub(r'\{@skill (.+?)\}', r'\1', s)
+        s = re.sub(r'\{@dice (.+?)\}', r'\1', s)
+
+        s = re.sub(r'\{@atk mw\}', r'melee weapon attack', s)
+        s = re.sub(r'\{@atk rw\}', r'ranged weapon attack', s)
+        s = re.sub(r'\{@atk mw,rw\}', r'melee, ranged weapon attack', s)
+        s = re.sub(r'\{@atkr m\}', r'melee attack roll', s)
+        s = re.sub(r'\{@atkr r\}', r'ranged attack roll', s)
+        s = re.sub(r'\{@atkr m,r\}', r'melee,ranged attack roll', s)
+
+        s = re.sub(r'\{@atk ms\}', r'melee spell attack', s)
+        s = re.sub(r'\{@atk rs\}', r'ranged spell attack', s)
+        s = re.sub(r'\{@atk ms,rs\}', r'melee, ranged spell attack', s)
+        
+
+
+        s = '. '.join(i.strip().capitalize() for i in s.split('. '))
+
+        # TODO: sanitize better strings like [[restrained|xphb]] 
+        s = re.sub(r'\{@spell (.+?)\}', r'[[\1]]', s)
+        s = re.sub(r'\{@item (.+?)\}', r'[[\1]]', s)
+        s = re.sub(r'\{@condition (.+?)\}', r'[[\1]]', s)
+        s = re.sub(r'\{@status (.+?)\}', r'[[\1]]', s)
+
+        s = re.sub(r'\{@hit -(\d+?)\}', r'-\1', s)
+        s = re.sub(r'\{@hit (\d+?)\}', r'+\1', s)
+        s = re.sub(r'\{@h\}', r'*Hit* ', s)
+        s = re.sub(r'\{@damage (.+?)\}', r'\1', s)
+
+        s = re.sub(r'\{@dc (\d+?)\}', r'DC\1', s)
+
+        s = re.sub(r'\{@recharge\}', r'(Recharge 6)', s)
+        s = re.sub(r'\{@recharge (.+?)\}', r'(Recharge \1)', s)
+
+        s = s.replace('||', '|')
+
+        return s
