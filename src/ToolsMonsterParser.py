@@ -59,6 +59,8 @@ class ToolsMonsterParser:
         data['cr'], data['lairCr'] = self.parseCR(data.get('cr'))
         data['ac'] = self.parseAC(data.get('ac'))
         data['senses'] = self.parseSenses(data.get('senses'))
+        data['speed'] = self.parseSpeed(data.get('speed'))
+        data['skill'] = self.parseSkills(data.get('skill'))
 
         return data
 
@@ -163,14 +165,19 @@ class ToolsMonsterParser:
                 acStr += str(element)
                 if len(ac) == 1:
                     return acStr 
-                
+
             if isinstance(element, dict):
                 for key, value in element.items():
                     if key == 'ac':
-                        acStr += f'{key}'
-                    else:
+                        acStr += f'{value}'
+                    elif isinstance(value, list):
+                        acStr += f' {key} {','.join(value)}'
+                        acStr.strip()
+                    elif isinstance(value, str):
                         acStr += f' {key} {value}'
                         acStr.strip()
+                    else:
+                        pass
 
         return acStr
 
@@ -251,3 +258,37 @@ class ToolsMonsterParser:
             return ', '.join(senses)
 
         raise TypeError(f'Senses type not considered {type(senses)}: {senses}')
+
+
+    @staticmethod
+    def parseSpeed(speed: dict | str | None) -> str:
+        if speed is None:
+            return ''
+        
+        if isinstance(speed, str):
+            return speed
+        
+        speedStr = ''
+        if isinstance(speed, dict):
+            for key, value in speed.items():
+                speedStr += f'{key} {value} ft'
+            return speedStr
+
+        raise TypeError(f'Type of speed not considered {type(speed)}: {speed}')
+
+
+    @staticmethod
+    def parseSkills(skills: dict | str | None) -> str:
+        if skills is None:
+            return ''
+        
+        if isinstance(skills, str):
+            return skills
+        
+        skillsStr = ''
+        if isinstance(skills, dict):
+            for key, value in skills.items():
+                skillsStr += f'{key} {value} '
+            return skillsStr.strip()
+
+        raise TypeError(f'Type of skills not considered {type(skills)}: {skills}')

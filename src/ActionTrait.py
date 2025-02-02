@@ -76,12 +76,14 @@ class ActionTrait():
 
         raise TypeError(f'ActionEntryElement not supported({type(actionTrait)}): {actionTrait}')
 
+
     def parseAttack(self) -> None:
         if type(self.attack) == list:
             self.attack = '\n'.join([t for t in self.attack if t is not None])
         self.attack.replace('•', '- ')
         if self.attack != '':
             self.attack = f'\n{self.attack}\n'
+
 
     def saveTrait(self) -> None:
         cleanName = self.name.replace('/', ' per ').replace('\\', ' per ')
@@ -109,6 +111,7 @@ class ActionTrait():
             outputFile.write(traitTextClean)
         
         self.completeText = f'![[{fileName.replace('.md','')}]]'
+
 
     def generateText(self) -> str:
         return self.template.render(self.__dict__)

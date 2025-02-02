@@ -8,7 +8,7 @@ class Monster:
     def __init__(self, data : dict[str, str], source : str, outputFolder : str) -> None:
         self.environment = Environment(loader = FileSystemLoader('templates/'))
         self.template = self.environment.get_template('monster.md')
-
+        
         self.data = data
         self.source = source
         self.name = self.data['name'].replace('/','-')
@@ -45,13 +45,13 @@ class Monster:
         self.skill = self.data.get('skill', '')
         self.senses = self.data.get('senses', '')
         self.languages = self.data.get('languages', '')
-
+        
         self.resist = self.data.get('resist', '')
         self.vulnerable = self.data.get('vulnerable', '')
         self.immune = self.data.get('immune', '')
         self.conditionImmune = self.data.get('conditionImmune', '')
         self.buildResistances()
-
+        
 
         self.outputFolder = outputFolder
         self.monsterOutputFolder = os.path.join(self.outputFolder, self.cr.replace('/', '-').replace('l','1').replace('00','0'))
