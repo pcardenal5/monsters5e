@@ -55,7 +55,7 @@ class Monster:
 
         self.outputFolder = outputFolder
         self.monsterOutputFolder = os.path.join(self.outputFolder, 'ByCR', self.cr.replace('/', '-').replace('l','1').replace('00','0'))
-        self.completeOutputPath = os.path.join(self.monsterOutputFolder, self.name) + '.md',
+        self.completeOutputPath = os.path.join(self.monsterOutputFolder, self.name) + '.md'
         if not os.path.exists(self.monsterOutputFolder):
             os.makedirs(self.monsterOutputFolder)
 

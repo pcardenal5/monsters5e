@@ -34,11 +34,8 @@ class ToolsMonsterParser:
                 except Exception as e:
                     
                     raise e
-                outputFolder = os.path.join(self.outputFolder, mon.cr.replace('/', '-').replace('l','1').replace('00','0'))
-                if not os.path.exists(outputFolder):
-                    os.makedirs(outputFolder)
 
-                with open(os.path.join(outputFolder, mon.name) + '.md', 'w') as outputFile:
+                with open(mon.completeOutputPath, 'w') as outputFile:
                     outputFile.write(mon.generateText())
 
 
@@ -100,7 +97,7 @@ class ToolsMonsterParser:
 
         subtype = 'None'
         if isinstance(type, str):
-            return type, subtype
+            return f'[[{type}]]', subtype
         if isinstance(type, dict):
             if type.get('tags') is not None:
                 tags = type['tags']
@@ -120,7 +117,7 @@ class ToolsMonsterParser:
                 subtype = 'None'
 
 
-            return type['type'], subtype
+            return f'[[{type['type']}]]', subtype
 
 
     @staticmethod

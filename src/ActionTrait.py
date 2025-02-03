@@ -38,6 +38,14 @@ class ActionTrait():
         if type(self.text) == list:
             self.text = '\n'.join([t for t in self.text if t is not None])
         self.text.replace('•', '- ')
+        self.text = self.text.replace('ft.', 'ft')
+        self.text = re.sub(re.escape(self.monsterName), 'the creature', self.text, flags = re.IGNORECASE)
+        self.text = re.sub(re.escape(self.monsterName.split(' ')[-1]), 'the creature', self.text, flags = re.IGNORECASE)
+        self.text = re.sub(re.escape(self.monsterName.split(' ')[0]), 'the creature', self.text, flags = re.IGNORECASE)
+        self.text = self.text.replace(' the the ', ' the ').replace('The the ', 'The ')
+        self.text = '. '.join(i.strip().capitalize() for i in self.text.split('. '))
+
+
 
 
     def parseActionEntries(self, actionTraitList: list) -> str:
@@ -88,27 +96,29 @@ class ActionTrait():
     def saveTrait(self) -> None:
         cleanName = self.name.replace('/', ' per ').replace('\\', ' per ')
         fileName = f'{cleanName}.md'
-        # TODO: move to parseText
-        traitTextClean = self.text.replace('ft.', 'ft')
-        traitTextClean = re.sub(re.escape(self.monsterName), 'the creature', traitTextClean, flags = re.IGNORECASE)
-        traitTextClean = re.sub(re.escape(self.monsterName.split(' ')[-1]), 'the creature', traitTextClean, flags = re.IGNORECASE)
-        traitTextClean = re.sub(re.escape(self.monsterName.split(' ')[0]), 'the creature', traitTextClean, flags = re.IGNORECASE)
-        traitTextClean = traitTextClean.replace(' the the ', ' the ').replace('The the ', 'The ')
-        traitTextClean = '.'.join('\n'.join(k.capitalize() for k in i.split('\n')).capitalize() for i in traitTextClean.split('.'))
 
         self.completeText = self.generateText()
+        # Check to see if a file with the same name exists.
         if os.path.exists(os.path.join(self.outputFolder,fileName)):
+            # If it does, read it to compare with the text of the current trait.
             with open(os.path.join(self.outputFolder,fileName), 'r') as inputFile:
                 text = ''.join(inputFile.readlines())
 
-            if traitTextClean == text:
+            # TODO: this comparison is too strict and some traits differ from a single, often meaningless, word.
+            # Maybe a dictionary could be done to save the different versions of the trait and save 
+            # only new ones. This could be achieved looping over every different 
+            # version of the trait. Very inefficient but could work. 
+            if self.text == text:
+                # It it is the same, change the full text by a hyperlink
                 self.completeText = f'![[{fileName.replace('.md','')}]]'
                 return 
-            # Save contents to new file
+
+            # If its not, save contents to new file
             fileName = f'{cleanName}_{self.monsterName}.md'
 
+        # If the file does not exist, save the contents to a new file
         with open(os.path.join(self.outputFolder, fileName), 'w') as outputFile:
-            outputFile.write(traitTextClean)
+            outputFile.write(self.completeText)
         
         self.completeText = f'![[{fileName.replace('.md','')}]]'
 
