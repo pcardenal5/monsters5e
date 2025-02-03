@@ -335,8 +335,8 @@ class ToolsMonsterParser:
         return data
 
 
-    @staticmethod
-    def sanitizeString(s0: str) -> str:
+    @classmethod
+    def sanitizeString(cls, s0: str) -> str:
         if not isinstance(s0, str):
             return s0
 
@@ -346,6 +346,7 @@ class ToolsMonsterParser:
         s = re.sub(r'\{@dice (.+?)\}', r'\1', s)
 
         s = re.sub(r'\{@atk mw\}', r'melee weapon attack', s)
+        s = re.sub(r'\{@atk m\}', r'melee weapon attack', s)
         s = re.sub(r'\{@atk rw\}', r'ranged weapon attack', s)
         s = re.sub(r'\{@atk mw,rw\}', r'melee, ranged weapon attack', s)
         s = re.sub(r'\{@atkr m\}', r'melee attack roll', s)
@@ -356,17 +357,26 @@ class ToolsMonsterParser:
         s = re.sub(r'\{@atk rs\}', r'ranged spell attack', s)
         s = re.sub(r'\{@atk ms,rs\}', r'melee, ranged spell attack', s)
         
-
+        s = re.sub(r'\{@actSaveFail\}', r'on a failure', s)
+        s = re.sub(r'\{@actsave (.+?)\}', r'\1 saving throw', s)
+        
+        # actsave \skill
+        
 
         s = '. '.join(i.strip().capitalize() for i in s.split('. '))
 
         s = re.sub(r'\{@spell (.+?)\}', r'[[\1]]', s)
         # Items need to be treated differently because they often
         #  come in the form {@item itemName|book|otherName}
-        res = re.compile(r'\{@item (.+?)\}').search(s)
-        if res:
-            itemName = res.group(1).split('|')[0]
-            s = re.sub(r'\{@item (.+?)\}', f'[[{itemName}]]', s)
+        s = cls.getLink(s,r'\{@item (.+?)\}')
+        s = cls.getLink(s,r'\{@creature (.+?)\}')
+        s = cls.getLink(s,r'\{@filter (.+?)\}')
+
+        s = cls.getLinkSection(s,r'\{@quickref (.+?)\}')
+        s = cls.getLinkSection(s,r'\{@acventure (.+?)\}')
+        s = cls.getLinkSection(s,r'\{@action (.+?)\}')
+
+        s = re.sub(r'\{@book (.+?)\|*.+?\}', r'\1', s)
 
         s = re.sub(r'\{@condition (.+?)\}', r'[[\1]]', s)
         s = re.sub(r'\{@status (.+?)\}', r'[[\1]]', s)
@@ -375,6 +385,7 @@ class ToolsMonsterParser:
         s = re.sub(r'\{@hit (\d+?)\}', r'+\1', s)
         s = re.sub(r'\{@h\}', r'*Hit* ', s)
         s = re.sub(r'\{@damage (.+?)\}', r'\1', s)
+        s = re.sub(r'\{@hom(.*?)\}', r'*Homing*', s)
 
         s = re.sub(r'\{@dc (\d+?)\}', r'DC\1', s)
 
@@ -382,5 +393,33 @@ class ToolsMonsterParser:
         s = re.sub(r'\{@recharge (.+?)\}', r'(Recharge \1)', s)
 
         s = s.replace('||', '|')
+
+        return s
+
+
+    @staticmethod
+    def getLink(s: str, regexPattern : str) -> str:
+        res = re.compile(regexPattern).search(s)
+        if res:
+            linkName = res.group(1).split('|')[0]
+            s = re.sub(regexPattern, f'[[{linkName}]]', s)
+
+        return s
+
+
+    @staticmethod
+    def getLinkSection(s : str, regexPattern : str) -> str:
+        res = re.compile(regexPattern).search(s)
+        if not res:
+            return s
+
+        linkName = res.group(1).split('|')[0]
+        names = linkName.split('|')
+
+        if (re.match(r'\d', names[-1])) or (not re.match(r'\s', names[-1])):
+            s = re.sub(regexPattern, f'[[{names[0]}]]', s)
+            return s
+
+        s = re.sub(regexPattern, f'[[{names[-1]}#{names[0]}|{names[0]}]]', s)
 
         return s
