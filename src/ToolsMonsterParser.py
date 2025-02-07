@@ -35,6 +35,10 @@ class ToolsMonsterParser:
                     
                     raise e
 
+                # Monster name is NOT unique across monster manuals, first check if it exists
+                if os.path.exists(mon.completeOutputPath):
+                    mon.completeOutputPath = mon.completeOutputPath.replace('.md', f'_{mon.source}.md')
+
                 with open(mon.completeOutputPath, 'w') as outputFile:
                     outputFile.write(mon.generateText())
 
@@ -97,7 +101,7 @@ class ToolsMonsterParser:
 
         subtype = 'None'
         if isinstance(type, str):
-            return f'[[{type}]]', subtype
+            return f'"[[{type}]]"', subtype
         if isinstance(type, dict):
             if type.get('tags') is not None:
                 tags = type['tags']
@@ -117,7 +121,7 @@ class ToolsMonsterParser:
                 subtype = 'None'
 
 
-            return f'[[{type['type']}]]', subtype
+            return f'"[[{type['type']}]]"', subtype
 
 
     @staticmethod
@@ -358,10 +362,22 @@ class ToolsMonsterParser:
         s = re.sub(r'\{@atk ms,rs\}', r'melee, ranged spell attack', s)
         
         s = re.sub(r'\{@actSaveFail\}', r'on a failure', s)
-        s = re.sub(r'\{@actsave (.+?)\}', r'\1 saving throw', s)
-        
-        # actsave \skill
-        
+        s = re.sub(r'\{@actsavefail\}', r'on a failure', s)
+        s = re.sub(re.escape('{@actsavesuccess}'), r'on a success', s)
+        s = re.sub(r'\{@actsave(.+?)\}', r'\1 saving throw', s)
+        s = re.sub(r'\{@actSave(.+?)\}', r'\1 saving throw', s)
+
+        s = re.sub(r'\{@disease (.+?)\}', r'\1', s)
+        s = re.sub(r'\{@hazard (.+?)\}', r'\1', s)
+        s = re.sub(r'\{@variantrule (.+?)\|*.+?\}', r'\1', s)
+
+        s = re.sub(r'\{@note (.+?)\}', r'(\1)', s)
+        s = re.sub(r'\{@hitYourSpellAttack(.+?)\}', r'your spell attack modifier', s)
+
+        if s.__contains__('skillcheck'):
+            pass
+
+        s = re.sub(r'\{@skillCheck([\w\s]+?)(\d+?)\}', r'\2', s)
 
         s = '. '.join(i.strip().capitalize() for i in s.split('. '))
 
@@ -371,18 +387,29 @@ class ToolsMonsterParser:
         s = cls.getLink(s,r'\{@item (.+?)\}')
         s = cls.getLink(s,r'\{@creature (.+?)\}')
         s = cls.getLink(s,r'\{@filter (.+?)\}')
+        s = re.sub(r'\{@chance (.+?)\|*.+?\}', r'\1% ', s)
+        s = re.sub(r'\{@b (.+?)}', r'**\1**', s)
+
+        s = cls.getLink(s,r'\{@table (.+?)\}')
 
         s = cls.getLinkSection(s,r'\{@quickref (.+?)\}')
-        s = cls.getLinkSection(s,r'\{@acventure (.+?)\}')
+        s = cls.getLinkSection(s,r'\{@adventure (.+?)\}')
         s = cls.getLinkSection(s,r'\{@action (.+?)\}')
 
         s = re.sub(r'\{@book (.+?)\|*.+?\}', r'\1', s)
 
         s = re.sub(r'\{@condition (.+?)\}', r'[[\1]]', s)
         s = re.sub(r'\{@status (.+?)\}', r'[[\1]]', s)
+        s = re.sub(r'\{@sense (.+?)\}', r'[[\1]]', s)
+
+        s = re.sub(r'\{@deity (.+?)\|*.+?\}', r'[[\1]]', s)
+
 
         s = re.sub(r'\{@hit -(\d+?)\}', r'-\1', s)
-        s = re.sub(r'\{@hit (\d+?)\}', r'+\1', s)
+        s = re.sub(r'\{@hit \+*(\d+?)\}', r'+\1', s)
+        s = re.sub(r'\{@h\}', r'*Hit* ', s)
+        s = re.sub(r'\{@acttrigger(.*?)\}', r'*Trigger* ', s)
+        s = re.sub(r'\{@actresponse(.*?)\}', r'*Response* ', s)
         s = re.sub(r'\{@h\}', r'*Hit* ', s)
         s = re.sub(r'\{@damage (.+?)\}', r'\1', s)
         s = re.sub(r'\{@hom(.*?)\}', r'*Homing*', s)
@@ -390,9 +417,14 @@ class ToolsMonsterParser:
         s = re.sub(r'\{@dc (\d+?)\}', r'DC\1', s)
 
         s = re.sub(r'\{@recharge\}', r'(Recharge 6)', s)
-        s = re.sub(r'\{@recharge (.+?)\}', r'(Recharge \1)', s)
+        s = re.sub(r'\{@recharge (.+?)\}', r'(Recharge \1 or greater)', s)
+
+        s = re.sub(r'\{@i (.+?)\}', r'\n- \1', s)
 
         s = s.replace('||', '|')
+
+        if s.__contains__('{@'):
+            raise ValueError(f'String has not been cleaned: {s}')
 
         return s
 

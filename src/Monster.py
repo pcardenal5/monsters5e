@@ -11,7 +11,7 @@ class Monster:
         
         self.data = data
         self.source = source
-        self.name = self.data['name'].replace('/','-')
+        self.name = self.data['name'].replace('/','-').title()
         self.size = self.data['size']
         self.type = self.data['type']
         self.cr = self.data['cr']

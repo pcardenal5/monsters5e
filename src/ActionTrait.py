@@ -8,14 +8,20 @@ class ActionTrait():
         self.environment = environment
         self.template = self.environment.get_template('ActionTrait.md')
 
-        self.mainOutputFolder = outputFolder
-        self.outputFolder = os.path.join(self.mainOutputFolder, 'Traits')
 
         self.actionTraitType = actionTraitType
         self.monsterName = monsterName
-        self.name = actionTrait.get('name', '')
-        if self.name == '':
+        self.name = actionTrait.get('name', 'None')
+        if self.name == 'None':
             print(f'{self.monsterName} has a trait with no name')
+        self.name = self.name.replace('[[resting]]', 'rest')
+
+        self.mainOutputFolder = outputFolder
+
+        # Group Traits by the first letter
+        self.outputFolder = os.path.join(self.mainOutputFolder, 'Traits', self.name[0].upper())
+        if not os.path.exists(self.outputFolder):
+            os.makedirs(self.outputFolder)
         if actionTrait.get('text'):
             self.text = actionTrait['text']
         elif actionTrait.get('entries') is not None:
@@ -23,6 +29,8 @@ class ActionTrait():
         else:
             self.text = ''
             print(f'{self.monsterName} has a trait with no text')
+
+
 
         self.attack = actionTrait.get('attack', '')
         self.parseText()
@@ -51,7 +59,7 @@ class ActionTrait():
     def parseActionEntries(self, actionTraitList: list) -> str:
         actionText = ''
         for item in actionTraitList:
-            actionText += self.parseActionEntryElement(item)
+            actionText += self.parseActionEntryElement(item) + '\n'
         return actionText
 
 
@@ -108,7 +116,7 @@ class ActionTrait():
             # Maybe a dictionary could be done to save the different versions of the trait and save 
             # only new ones. This could be achieved looping over every different 
             # version of the trait. Very inefficient but could work. 
-            if self.text == text:
+            if self.completeText == text:
                 # It it is the same, change the full text by a hyperlink
                 self.completeText = f'![[{fileName.replace('.md','')}]]'
                 return 
