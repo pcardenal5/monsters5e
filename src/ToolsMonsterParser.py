@@ -65,6 +65,7 @@ class ToolsMonsterParser:
         data['speed'] = self.parseSpeed(data.get('speed'))
         data['skill'] = self.parseSkills(data.get('skill'))
         data['languages'] = self.parseLanguages(data.get('languages'))
+        data['trait'] = self.parseTraits(data)
 
         return data
 
@@ -455,3 +456,8 @@ class ToolsMonsterParser:
         s = re.sub(regexPattern, f'[[{names[-1]}#{names[0]}|{names[0]}]]', s)
 
         return s
+
+
+    @staticmethod
+    def parseTraits(data : dict) -> list:
+        return data.get('trait',[]) + data.get('bonus', [])

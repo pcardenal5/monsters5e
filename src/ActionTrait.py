@@ -106,10 +106,11 @@ class ActionTrait():
         fileName = f'{cleanName}.md'
 
         self.completeText = self.generateText()
+        self.completeFilePath = os.path.join(self.outputFolder, fileName)
         # Check to see if a file with the same name exists.
-        if os.path.exists(os.path.join(self.outputFolder,fileName)):
+        if os.path.exists(self.completeFilePath):
             # If it does, read it to compare with the text of the current trait.
-            with open(os.path.join(self.outputFolder,fileName), 'r') as inputFile:
+            with open(self.completeFilePath, 'r') as inputFile:
                 text = ''.join(inputFile.readlines())
 
             # TODO: this comparison is too strict and some traits differ from a single, often meaningless, word.
@@ -118,17 +119,18 @@ class ActionTrait():
             # version of the trait. Very inefficient but could work. 
             if self.completeText == text:
                 # It it is the same, change the full text by a hyperlink
-                self.completeText = f'![[{fileName.replace('.md','')}]]'
+                self.completeText = f'![[{self.completeFilePath.replace('.md','').replace(f'{self.mainOutputFolder}/', '')}|{fileName.replace('.md','')}]]'
                 return 
 
             # If its not, save contents to new file
             fileName = f'{cleanName}_{self.monsterName}.md'
+            self.completeFilePath = os.path.join(self.outputFolder, fileName)
 
         # If the file does not exist, save the contents to a new file
-        with open(os.path.join(self.outputFolder, fileName), 'w') as outputFile:
+        with open(self.completeFilePath, 'w') as outputFile:
             outputFile.write(self.completeText)
         
-        self.completeText = f'![[{fileName.replace('.md','')}]]'
+        self.completeText = f'![[{self.completeFilePath.replace('.md','').replace(f'{self.mainOutputFolder}/', '')}|{fileName.replace('.md','')}]]'
 
 
     def generateText(self) -> str:
