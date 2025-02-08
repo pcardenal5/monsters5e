@@ -18,7 +18,6 @@ class ToolsMonsterParser:
         for file in tqdm(fileList):
             if not file.startswith('bestiary'):
                 continue
-            print(file)
             # Open xml file and get the monster list
             with open(os.path.join(self.dataPath, file), 'r') as inputFile:
                 data : list[dict]= json.load(inputFile)['monster']
