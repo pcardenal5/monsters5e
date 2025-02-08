@@ -2,6 +2,7 @@ import os
 import json
 from src.Monster import Monster
 import re
+from tqdm import tqdm
 
 class ToolsMonsterParser:
     def __init__(self, dataPath : str, outputFolder : str) -> None:
@@ -14,7 +15,7 @@ class ToolsMonsterParser:
     def generateMonsterList(self) -> None:
         fileList = os.listdir(self.dataPath)
         fileList.sort()
-        for file in fileList:
+        for file in tqdm(fileList):
             if not file.startswith('bestiary'):
                 continue
             print(file)

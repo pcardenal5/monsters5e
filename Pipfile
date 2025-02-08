@@ -6,9 +6,12 @@ name = "pypi"
 [packages]
 xmltodict = "*"
 jinja2 = "*"
+tqdm = "*"
 
 [dev-packages]
 
+[scripts]
+main = "python main.py"
+
 [requires]
 python_version = "3.12"
-python_full_version = "3.12.5"

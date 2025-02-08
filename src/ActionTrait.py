@@ -117,7 +117,7 @@ class ActionTrait():
             # Maybe a dictionary could be done to save the different versions of the trait and save 
             # only new ones. This could be achieved looping over every different 
             # version of the trait. Very inefficient but could work. 
-            if self.completeText == text:
+            if self.completeText == text or self.checkIfSave():
                 # It it is the same, change the full text by a hyperlink
                 self.completeText = f'![[{self.completeFilePath.replace('.md','').replace(f'{self.mainOutputFolder}/', '')}|{fileName.replace('.md','')}]]'
                 return 
@@ -135,3 +135,31 @@ class ActionTrait():
 
     def generateText(self) -> str:
         return self.template.render(self.__dict__)
+
+
+    def checkIfSave(self) -> bool:
+        '''
+        Checks whether or not to try to save the trait. The main criteria is 
+        cheching to see if the actionTraitType is `'trait'`, but some are
+        hard coded.
+
+        This list is done manually by checking after one iteration has been done 
+        '''
+        exceptionList = [
+            'Aggressive',
+            'Legendary resistance',
+            'Magic resistance',
+            'Pack tactics',
+            'Swarm',
+            'Incorporeal movement',
+            'Evasion',
+            'Keen' # Captures all keen eye, smell, etc.
+        ]
+
+        check = lambda s: (self.name.lower().startswith(s))
+
+        b = False
+        for exception in exceptionList:
+            b = b or check(exception.lower())
+
+        return b
