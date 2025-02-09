@@ -487,7 +487,7 @@ class ToolsMonsterParser:
 
     @staticmethod
     def parseTraits(data : dict) -> list:
-        return data.get('trait',[]) + data.get('bonus', [])
+        return data.get('trait',[]) + data.get('bonus', []) + data.get('spellcasting',[]) + data.get('Spellcasting',[])
 
 
     @classmethod

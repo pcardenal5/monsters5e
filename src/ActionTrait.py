@@ -8,12 +8,12 @@ class ActionTrait():
         self.environment = environment
         self.template = self.environment.get_template('ActionTrait.md')
 
+        self.data = actionTrait
+
 
         self.actionTraitType = actionTraitType
         self.monsterName = monsterName
-        self.name = actionTrait.get('name', 'None')
-        if self.name == 'None':
-            print(f'{self.monsterName} has a trait with no name')
+        self.name = self.data.get('name', 'None')
         self.name = self.name.replace('[[resting]]', 'rest')
 
         self.mainOutputFolder = outputFolder
@@ -22,17 +22,16 @@ class ActionTrait():
         self.outputFolder = os.path.join(self.mainOutputFolder, 'Traits', self.name[0].upper())
         if not os.path.exists(self.outputFolder):
             os.makedirs(self.outputFolder)
-        if actionTrait.get('text'):
-            self.text = actionTrait['text']
-        elif actionTrait.get('entries') is not None:
-            self.text = self.parseActionEntries(actionTrait['entries'])
+        if self.data.get('text'):
+            self.text = self.data['text']
+        elif self.data.get('entries') is not None:
+            self.text = self.parseActionEntries(self.data['entries'])
         else:
             self.text = ''
-            print(f'{self.monsterName} has a trait with no text')
 
 
 
-        self.attack = actionTrait.get('attack', '')
+        self.attack = self.data.get('attack', '')
         self.parseText()
         self.parseAttack()
 
@@ -134,6 +133,8 @@ class ActionTrait():
 
 
     def generateText(self) -> str:
+        if self.name.lower().__contains__('spellcasting'):
+            return self.parseSpellcasting()
         return self.template.render(self.__dict__)
 
 
@@ -163,3 +164,70 @@ class ActionTrait():
             b = b or check(exception.lower())
 
         return b
+
+
+    def parseSpellcasting(self) -> str:
+        if not self.data:
+            return ''
+
+        s = ''
+        if isinstance(self.data, dict):
+            s += f'### {self.data['name']}\n'
+            if self.data.get('headerEntries'):
+                s += f'{''.join(self.data['headerEntries'])}\n'
+            if self.data.get('spells'):
+                s += self.parseSpells(self.data['spells'])
+            if self.data.get('will'):
+                s += self.parseAtWillSpells(self.data['will'])
+            if self.data.get('daily'):
+                s += self.parseDailySpells(self.data['daily'])
+        elif isinstance(self.data, str):
+            pass
+        else:
+            raise TypeError(f'Type not considered for spellcasting item({type(self.data)}): {self.data}')
+
+        return s
+
+
+    @staticmethod
+    def parseDailySpells(data: dict[str, list[str]]) -> str:
+        ds = ''
+        for key, value in data.items():
+            ds += f'{key.replace('e', 'per day each')}: '
+            for item in value:
+                if isinstance(item, str):
+                    ds += f'{item}, '
+                elif isinstance(item, dict):
+                    if not item.get('hidden', False):
+                        ds += f'{item['entry']}, '
+                else:
+                    raise TypeError(f'Type not considered for daily spell element({type(item)}) : {item}')
+                ds += '\n'
+        return ds
+
+
+    @staticmethod
+    def parseAtWillSpells(data: list) -> str:
+        ws = 'At will:'
+        for value in data:
+            if isinstance(value, str):
+                ws += f'{value}, '
+            elif isinstance(value, dict):
+                if not value.get('hidden', False):
+                    ws += f'{value['entry']}, '
+            else:
+                raise TypeError(f'Type not considered for at-will spell element({type(value)}) : {value}')
+            
+            ws += '\n'
+        return ws
+
+
+    @staticmethod
+    def parseSpells(data : dict[str, dict]) -> str:
+        s = ''
+        for key, value in data.items():
+            s += f'- {key}' 
+            if value.get('slots'):
+                s += f' ({value['slots']} slots)' 
+            s += f': {', '.join(value['spells'])}.\n'
+        return s                
