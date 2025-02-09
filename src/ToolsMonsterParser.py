@@ -1,6 +1,7 @@
 import os
 import json
 from src.Monster import Monster
+from src.LegendaryGroup import LegendaryGroup
 import re
 from tqdm import tqdm
 
@@ -16,31 +17,53 @@ class ToolsMonsterParser:
         fileList = os.listdir(self.dataPath)
         fileList.sort()
         for file in tqdm(fileList):
-            if not file.startswith('bestiary'):
+            if file.startswith('bestiary'):
                 continue
-            # Open xml file and get the monster list
-            with open(os.path.join(self.dataPath, file), 'r') as inputFile:
-                data : list[dict]= json.load(inputFile)['monster']
+                self.readMonsterData(file)
+            elif file.startswith('legendarygroups'):
+                self.readLegendaryGroupData(file)
 
-            for monster in data:
-                # Skip monsters that are copies of other creatures
-                # TODO: consider "Edge" case 
-                if monster.get('_copy') is not None:
-                    continue
-                monster = self.sanitizeData(monster)
-                try:
-                    monsterData = self.adaptToMonster(monster) # type:ignore
-                    mon = Monster(data = monsterData, source = monsterData['source'], outputFolder = self.outputFolder)
-                except Exception as e:
-                    
-                    raise e
 
-                # Monster name is NOT unique across monster manuals, first check if it exists
-                if os.path.exists(mon.completeOutputPath):
-                    mon.completeOutputPath = mon.completeOutputPath.replace('.md', f'_{mon.source}.md')
+    def readMonsterData(self, file : str):
+        # Open json file and get the monster list
+        with open(os.path.join(self.dataPath, file), 'r') as inputFile:
+            data : list[dict]= json.load(inputFile)['monster']
 
-                with open(mon.completeOutputPath, 'w') as outputFile:
-                    outputFile.write(mon.generateText())
+        for monster in data:
+            # Skip monsters that are copies of other creatures
+            # TODO: consider "Edge" case 
+            if monster.get('_copy') is not None:
+                continue
+            monsterData = self.adaptToMonster(self.sanitizeData(monster)) # type:ignore
+            mon = Monster(data = monsterData, source = monsterData['source'], outputFolder = self.outputFolder)
+
+            # Monster name is NOT unique across monster manuals, first check if it exists
+            if os.path.exists(mon.completeOutputPath):
+                mon.completeOutputPath = mon.completeOutputPath.replace('.md', f'_{mon.source}.md')
+
+            with open(mon.completeOutputPath, 'w') as outputFile:
+                outputFile.write(mon.generateText())
+
+
+    def readLegendaryGroupData(self, file : str): 
+
+        with open(os.path.join(self.dataPath, file), 'r') as inputFile:
+            data : list[dict]= json.load(inputFile)['legendaryGroup']
+
+        for legendaryGroup in data:
+            if legendaryGroup.get('_copy') is not None:
+                continue
+            legendaryGroupData = self.adaptToLegendaryGroup(self.sanitizeData(legendaryGroup))# type:ignore
+            lg = LegendaryGroup(data = legendaryGroupData, source = legendaryGroupData['source'], outputFolder = self.outputFolder)
+
+            # Monster name is NOT unique across monster manuals, first check if it exists
+            if os.path.exists(lg.completeOutputPath):
+                lg.completeOutputPath = lg.completeOutputPath.replace('.md', f'_{lg.source}.md')
+
+            with open(lg.completeOutputPath, 'w') as outputFile:
+                outputFile.write(lg.generateText())
+
+
 
 
     def adaptToMonster(self, data: dict)-> dict:
@@ -66,6 +89,14 @@ class ToolsMonsterParser:
         data['skill'] = self.parseSkills(data.get('skill'))
         data['languages'] = self.parseLanguages(data.get('languages'))
         data['trait'] = self.parseTraits(data)
+
+        return data
+
+
+    def adaptToLegendaryGroup(self, data : dict) -> dict:
+        data['lairActions'] = self.parseLairActions(data.get('lairActions'))
+        data['regionalEffects'] = self.parseLairActions(data.get('regionalEffects'))
+        data['mythicEncounter'] = data.get('mythicEncounter', '')
 
         return data
 
@@ -461,3 +492,35 @@ class ToolsMonsterParser:
     @staticmethod
     def parseTraits(data : dict) -> list:
         return data.get('trait',[]) + data.get('bonus', [])
+
+
+    @classmethod
+    def parseLairActions(cls, actions : list | None) -> str:
+        if actions is None:
+            return ''
+
+        lairActionString = ''
+        for action in actions:
+            if isinstance(action, str):
+                lairActionString += f'{action}\n'
+            if isinstance(action, dict):
+                if action.get('type', '') == 'list':
+                    lairActionString += f'{cls.parseListTypeDict(action)}\n'
+                if action.get('type', '') == 'entries':
+                    lairActionString += f'### {action['name']}\n{cls.parseLairActions(action)}\n' # type:ignore
+
+
+        return lairActionString
+
+            
+    @staticmethod
+    def parseListTypeDict(d : dict) -> str:
+        # Assume the dictionary already has a 
+        #   "type" : "list"
+        # key: value pair
+        s = ''
+        for value in d['items']:
+            if isinstance(value, dict):
+                s += f'### {value['name']}\n{'\n- '.join(value['entries'])}'
+            s += f'- {value}\n'
+        return s

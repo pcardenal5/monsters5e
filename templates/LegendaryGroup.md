@@ -1,0 +1,5 @@
+# {{name}}
+
+{{lairActions}}
+{{regionalEffects}}
+{{mythicEncounter}}

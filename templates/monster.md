@@ -30,5 +30,6 @@ Size: {{size}}
 
 **Languages**: {{languages}}
 
+{{legendaryGroup}}
 {{resistances}}
 {{actionTraits}}

@@ -46,6 +46,9 @@ class Monster:
         self.senses = self.data.get('senses', '')
         self.languages = self.data.get('languages', '')
         
+        self.legendaryGroup = self.data.get('legendaryGroup', '')
+        self.parseLegendaryGroup()
+
         self.resist = self.data.get('resist', '')
         self.vulnerable = self.data.get('vulnerable', '')
         self.immune = self.data.get('immune', '')
@@ -113,3 +116,10 @@ class Monster:
             return int(regex.group(1))
 
         return self.__getattribute__(stat + 'Mod')
+
+
+    def parseLegendaryGroup(self) -> None:
+        if self.legendaryGroup == '':
+            return 
+        self.legendaryGroup = f'![[Legendary Group {self.legendaryGroup['name']}_{self.legendaryGroup['source']}|Legendary Group {self.legendaryGroup['name']}]]' #type: ignore
+        return
