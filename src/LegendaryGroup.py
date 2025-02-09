@@ -17,7 +17,7 @@ class LegendaryGroup:
 
         self.outputFolder = outputFolder
         self.groupsOutputFolder = os.path.join(self.outputFolder, 'LegendaryGroups')
-        self.completeOutputPath = os.path.join(self.groupsOutputFolder, f'{self.name}_{self.source}') + '.md'
+        self.completeOutputPath = os.path.join(self.groupsOutputFolder, f'Legendary Group {self.name}_{self.source}') + '.md'
         if not os.path.exists(self.groupsOutputFolder):
             os.makedirs(self.groupsOutputFolder)
 

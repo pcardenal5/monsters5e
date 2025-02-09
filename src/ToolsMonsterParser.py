@@ -18,7 +18,6 @@ class ToolsMonsterParser:
         fileList.sort()
         for file in tqdm(fileList):
             if file.startswith('bestiary'):
-                continue
                 self.readMonsterData(file)
             elif file.startswith('legendarygroups'):
                 self.readLegendaryGroupData(file)
