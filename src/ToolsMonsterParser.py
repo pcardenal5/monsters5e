@@ -238,13 +238,7 @@ class ToolsMonsterParser:
     def parseConditions(cls, conditionList: list | None, conditionName: str) -> str:
         if conditionList is None:
             return 'None'
-
-        conditionStr = ''
-        for item in conditionList:
-            conditionStr += cls.parseConditionElement(item, conditionName) + ' '
-
-        conditionStr = conditionStr.strip()
-
+        conditionStr = ', '.join(cls.parseConditionElement(item, conditionName) for item in conditionList)
         return conditionStr
 
     @classmethod
@@ -303,11 +297,8 @@ class ToolsMonsterParser:
         if isinstance(speed, str):
             return speed
         
-        speedStr = ''
         if isinstance(speed, dict):
-            for key, value in speed.items():
-                speedStr += f'{key} {value} ft'
-            return speedStr
+            return ', '.join(f'{key} {value} ft' for key, value in speed.items())
 
         raise TypeError(f'Type of speed not considered {type(speed)}: {speed}')
 
@@ -320,11 +311,8 @@ class ToolsMonsterParser:
         if isinstance(skills, str):
             return skills
         
-        skillsStr = ''
         if isinstance(skills, dict):
-            for key, value in skills.items():
-                skillsStr += f'{key} {value} '
-            return skillsStr.strip()
+            return ', '.join(f'{key} {value}' for key, value in skills.items())
 
         raise TypeError(f'Type of skills not considered {type(skills)}: {skills}')
 

@@ -41,10 +41,10 @@ class Monster:
         self.wisSave = self.getSave('wis')
         self.chaSave = self.getSave('cha')
 
-        self.speed = self.data.get('speed', 0)
-        self.skill = self.data.get('skill', '')
-        self.senses = self.data.get('senses', '')
-        self.languages = self.data.get('languages', '')
+        self.speed = self.parseSpeed(self.data)
+        self.skill = self.parseSkill(self.data)
+        self.senses = self.parseSenses(self.data)
+        self.languages = self.parseLanguages(self.data)
         
         self.legendaryGroup = self.data.get('legendaryGroup', '')
         self.parseLegendaryGroup()
@@ -84,13 +84,13 @@ class Monster:
     def buildResistances(self) -> None:
         self.resistances = ''
 
-        if self.resist != '':
+        if self.resist != '' and self.resist != 'None':
             self.resistances += '**Resistances**: ' + self.resist + '\n\n'
-        if self.vulnerable != '':
+        if self.vulnerable != '' and self.vulnerable != 'None':
             self.resistances += '**Vulnerabilities**: ' + self.vulnerable + '\n\n'
-        if self.immune != '':
+        if self.immune != '' and self.immune != 'None':
             self.resistances += '**Damage Immunities**: ' + self.immune + '\n\n'
-        if self.conditionImmune != '':
+        if self.conditionImmune != '' and self.conditionImmune != 'None':
             self.resistances += '**Condition Immunities**: ' + self.conditionImmune + '\n\n'
 
     def buildActionTraits(self) -> None:
@@ -123,3 +123,35 @@ class Monster:
             return 
         self.legendaryGroup = f'![[Legendary Group {self.legendaryGroup['name']}_{self.legendaryGroup['source']}|Legendary Group {self.legendaryGroup['name']}]]' #type: ignore
         return
+
+    
+    
+    @staticmethod
+    def parseSpeed(data : dict) -> str:
+        if data.get('speed'):
+            return f'**Speed**: {data.get('speed')}\n'
+        return ''
+
+
+    @staticmethod
+    def parseSkill(data : dict) -> str:
+        if data.get('skill'):
+            return f'**Skills**: {data.get('skill')}\n'
+        return ''
+
+
+
+    @staticmethod
+    def parseSenses(data : dict) -> str:
+        if data.get('senses'):
+            return f'**Senses**: {data.get('senses')}\n'
+        return ''
+
+
+
+    @staticmethod
+    def parseLanguages(data : dict) -> str:
+        if data.get('languages'):
+            return f'**Languages**: {data.get('languages')}\n'
+        return ''
+

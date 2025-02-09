@@ -22,14 +22,11 @@ Size: {{size}}
 | Mod |{{strMod}}|{{dexMod}}|{{conMod}}|{{intMod}}|{{wisMod}}|{{chaMod}}|
 | Save |{{strSave}}|{{dexSave}}|{{conSave}}|{{intSave}}|{{wisSave}}|{{chaSave}}|
 
-**Speed**: {{speed}}
-
-**Skills**: {{skill}}
-
-**Senses**: {{senses}}
-
-**Languages**: {{languages}}
+{{speed}}
+{{skill}}
+{{senses}}
+{{languages}}
+{{resistances}}
 
 {{legendaryGroup}}
-{{resistances}}
 {{actionTraits}}
