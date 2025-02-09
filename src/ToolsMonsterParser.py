@@ -71,6 +71,8 @@ class ToolsMonsterParser:
         # Thus, we only change the values that actually
         # need to change
 
+        if data['name'].lower().__contains__('adult gold') and data['name'].lower().endswith('dragon'):
+            pass
         data['size'] = ','.join([self.parseSize(i) for i in data.get('size', [])])
         data['alias'] = ','.join([i for i in data.get('alias', [])])
         data['type'], data['additionalType'] = self.parseTypes(data.get('type'))
@@ -364,6 +366,7 @@ class ToolsMonsterParser:
             return s0
 
         s = s0.replace('ft.', 'ft')
+        s = s.replace('[Area of Effect]', '(Area of Effect)')
 
         s = re.sub(r'\{@skill (.+?)\}', r'\1', s)
         s = re.sub(r'\{@dice (.+?)\}', r'\1', s)
@@ -388,7 +391,6 @@ class ToolsMonsterParser:
 
         s = re.sub(r'\{@disease (.+?)\}', r'\1', s)
         s = re.sub(r'\{@hazard (.+?)\}', r'\1', s)
-        s = re.sub(r'\{@variantrule (.+?)\|*.+?\}', r'\1', s)
 
         s = re.sub(r'\{@note (.+?)\}', r'(\1)', s)
         s = re.sub(r'\{@hitYourSpellAttack(.+?)\}', r'your spell attack modifier', s)
@@ -397,28 +399,32 @@ class ToolsMonsterParser:
 
         s = '. '.join(i.strip().capitalize() for i in s.split('. '))
 
-        s = re.sub(r'\{@spell (.+?)\}', r'[[\1]]', s)
         # Items need to be treated differently because they often
         #  come in the form {@item itemName|book|otherName}
-        s = cls.getLink(s,r'\{@item (.+?)\}')
-        s = cls.getLink(s,r'\{@creature (.+?)\}')
-        s = cls.getLink(s,r'\{@filter (.+?)\}')
-        s = re.sub(r'\{@chance (.+?)\|*.+?\}', r'\1% ', s)
-        s = re.sub(r'\{@b (.+?)}', r'**\1**', s)
-
+        s = cls.getLink(s, r'\{@spell (.+?)\}' )
+        s = cls.getLink(s, r'\{@item (.+?)\}')
+        s = cls.getLink(s, r'\{@creature (.+?)\}')
+        s = cls.getLink(s, r'\{@filter (.+?)\}')
+        s = cls.getLink(s, r'\{@status (.+?)\}')
+        s = cls.getLink(s, r'\{@variantrule (.+?)\}')   
+        s = cls.getLink(s, r'\{@condition (.+?)\}')
+        s = cls.getLink(s, r'\{@chance (.+?)\}')
+        s = cls.getLink(s,r'\{@deity (.+?)\}',)
         s = cls.getLink(s,r'\{@table (.+?)\}')
 
+        s = re.sub(r'\{@b (.+?)}', r'**\1**', s)
+
+
+        s = cls.getLinkSection(s,r'\{@book (.+?)\}',)
         s = cls.getLinkSection(s,r'\{@quickref (.+?)\}')
         s = cls.getLinkSection(s,r'\{@adventure (.+?)\}')
         s = cls.getLinkSection(s,r'\{@action (.+?)\}')
 
-        s = re.sub(r'\{@book (.+?)\|*.+?\}', r'\1', s)
+        
 
-        s = re.sub(r'\{@condition (.+?)\}', r'[[\1]]', s)
-        s = re.sub(r'\{@status (.+?)\}', r'[[\1]]', s)
         s = re.sub(r'\{@sense (.+?)\}', r'[[\1]]', s)
 
-        s = re.sub(r'\{@deity (.+?)\|*.+?\}', r'[[\1]]', s)
+        
 
 
         s = re.sub(r'\{@hit -(\d+?)\}', r'-\1', s)
@@ -447,10 +453,11 @@ class ToolsMonsterParser:
 
     @staticmethod
     def getLink(s: str, regexPattern : str) -> str:
-        res = re.compile(regexPattern).search(s)
-        if res:
-            linkName = res.group(1).split('|')[0]
-            s = re.sub(regexPattern, f'[[{linkName}]]', s)
+        for res in re.compile('(' + regexPattern + ')').findall(s):
+            if not res:
+                return s
+            linkName = res[1].split('|')[0]
+            s = s.replace(res[0], f'[[{linkName}]]')
 
         return s
 
