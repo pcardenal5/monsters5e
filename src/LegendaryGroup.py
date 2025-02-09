@@ -10,6 +10,9 @@ class LegendaryGroup:
         self.data = data
         self.name = self.data['name']
         self.source = self.data['source']
+        self.lairActions = self.data['lairActions']
+        self.regionalEffects = self.data['regionalEffects']
+        self.mythicEncounter = self.data['mythicEncounter']
 
 
         self.outputFolder = outputFolder

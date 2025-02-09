@@ -406,9 +406,6 @@ class ToolsMonsterParser:
         s = re.sub(r'\{@note (.+?)\}', r'(\1)', s)
         s = re.sub(r'\{@hitYourSpellAttack(.+?)\}', r'your spell attack modifier', s)
 
-        if s.__contains__('skillcheck'):
-            pass
-
         s = re.sub(r'\{@skillCheck([\w\s]+?)(\d+?)\}', r'\2', s)
 
         s = '. '.join(i.strip().capitalize() for i in s.split('. '))
@@ -503,24 +500,40 @@ class ToolsMonsterParser:
         for action in actions:
             if isinstance(action, str):
                 lairActionString += f'{action}\n'
-            if isinstance(action, dict):
-                if action.get('type', '') == 'list':
-                    lairActionString += f'{cls.parseListTypeDict(action)}\n'
-                if action.get('type', '') == 'entries':
-                    lairActionString += f'### {action['name']}\n{cls.parseLairActions(action)}\n' # type:ignore
+            elif isinstance(action, dict):
+                if action.get('type', '').lower() == 'list':
+                    lairActionString += f'{cls.parseListTypeDict(action, key = 'items')}\n'
+                elif action.get('type', '').lower() == 'entries':
+                    lairActionString += f'\n### {action['name']}\n{cls.parseListTypeDict(action, key = 'entries')}\n' # type:ignore
+            else:
+                raise TypeError(f'Action type not considered ({type(action)}) : {action}')
 
 
         return lairActionString
 
             
     @staticmethod
-    def parseListTypeDict(d : dict) -> str:
+    def parseListTypeDict(d : dict, key : str) -> str:
         # Assume the dictionary already has a 
         #   "type" : "list"
         # key: value pair
         s = ''
-        for value in d['items']:
+        if len(d[key]) == 1:
+            split = ''
+        else:
+            split = '- '
+        for value in d[key]:
             if isinstance(value, dict):
-                s += f'### {value['name']}\n{'\n- '.join(value['entries'])}'
-            s += f'- {value}\n'
+                if value.get('name'):
+                    if value.get('entries'):
+                        s += f'\n### {value['name']}\n{f'\n{split}'.join(value['entries'])}\n'
+                    elif value.get('entries'):
+                        s += f'\n### {value['name']}\n{split}{value['entry']}\n'
+                else:
+                    if value.get('entries'):
+                        s += f'\n{split}'.join(value['entries'])
+                    elif value.get('entries'):
+                        s += f'{split}{value['entry']}'
+            if isinstance(value, str):
+                s += f'{split}{value}\n'
         return s
