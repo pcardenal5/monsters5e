@@ -193,7 +193,7 @@ class ActionTrait():
     def parseDailySpells(data: dict[str, list[str]]) -> str:
         ds = ''
         for key, value in data.items():
-            ds += f'{key.replace('e', 'per day each')}: '
+            ds += f'- {key.replace('e', ' per day each')}: '
             for item in value:
                 if isinstance(item, str):
                     ds += f'{item}, '
@@ -202,13 +202,14 @@ class ActionTrait():
                         ds += f'{item['entry']}, '
                 else:
                     raise TypeError(f'Type not considered for daily spell element({type(item)}) : {item}')
-                ds += '\n'
+            ds = ds.strip().removesuffix(',')
+            ds += '\n'
         return ds
 
 
     @staticmethod
     def parseAtWillSpells(data: list) -> str:
-        ws = 'At will:'
+        ws = '- At will: '
         for value in data:
             if isinstance(value, str):
                 ws += f'{value}, '
@@ -217,8 +218,7 @@ class ActionTrait():
                     ws += f'{value['entry']}, '
             else:
                 raise TypeError(f'Type not considered for at-will spell element({type(value)}) : {value}')
-            
-            ws += '\n'
+        ws += '\n'
         return ws
 
 

@@ -15,7 +15,6 @@ class ToolsMonsterParser:
 
     def generateMonsterList(self) -> None:
         fileList = os.listdir(self.dataPath)
-        fileList.sort()
         for file in tqdm(fileList):
             if file.startswith('bestiary'):
                 self.readMonsterData(file)
@@ -409,10 +408,11 @@ class ToolsMonsterParser:
         s = cls.getLink(s, r'\{@variantrule (.+?)\}')   
         s = cls.getLink(s, r'\{@condition (.+?)\}')
         s = cls.getLink(s, r'\{@chance (.+?)\}')
-        s = cls.getLink(s,r'\{@deity (.+?)\}',)
-        s = cls.getLink(s,r'\{@table (.+?)\}')
+        s = cls.getLink(s, r'\{@deity (.+?)\}',)
+        s = cls.getLink(s, r'\{@table (.+?)\}')
 
         s = re.sub(r'\{@b (.+?)}', r'**\1**', s)
+        s = re.sub(r'\{@i (.+?)\}', r'_\1_', s)        
 
 
         s = cls.getLinkSection(s,r'\{@book (.+?)\}',)
@@ -440,8 +440,6 @@ class ToolsMonsterParser:
 
         s = re.sub(r'\{@recharge\}', r'(Recharge 6)', s)
         s = re.sub(r'\{@recharge (.+?)\}', r'(Recharge \1 or greater)', s)
-
-        s = re.sub(r'\{@i (.+?)\}', r'\n- \1', s)
 
         s = s.replace('||', '|')
 
@@ -523,6 +521,10 @@ class ToolsMonsterParser:
                         s += f'\n### {value['name']}\n{f'\n{split}'.join(value['entries'])}\n'
                     elif value.get('entries'):
                         s += f'\n### {value['name']}\n{split}{value['entry']}\n'
+                elif value.get('items'):
+                    for item in value['items']:
+                        s += f'\n{split}**{item['name']}**: {item['entry']}'
+                        
                 else:
                     if value.get('entries'):
                         s += f'\n{split}'.join(value['entries'])
