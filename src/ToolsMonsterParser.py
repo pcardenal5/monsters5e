@@ -1,5 +1,7 @@
 import os
 import json
+import sys
+sys.path.append('.')
 from src.Monster import Monster
 from src.LegendaryGroup import LegendaryGroup
 import re
@@ -94,8 +96,8 @@ class ToolsMonsterParser:
 
 
     def adaptToLegendaryGroup(self, data : dict) -> dict:
-        data['lairActions'] = self.parseLairActions(data.get('lairActions'))
-        data['regionalEffects'] = self.parseLairActions(data.get('regionalEffects'))
+        data['lairActions'] = self.parseLairActions(data, legendaryType = 'lairActions')
+        data['regionalEffects'] = self.parseLairActions(data, legendaryType = 'regionalEffects')
         data['mythicEncounter'] = data.get('mythicEncounter', '')
 
         return data
@@ -407,7 +409,6 @@ class ToolsMonsterParser:
         s = cls.getLink(s, r'\{@status (.+?)\}')
         s = cls.getLink(s, r'\{@variantrule (.+?)\}')   
         s = cls.getLink(s, r'\{@condition (.+?)\}')
-        s = cls.getLink(s, r'\{@chance (.+?)\}')
         s = cls.getLink(s, r'\{@deity (.+?)\}',)
         s = cls.getLink(s, r'\{@table (.+?)\}')
 
@@ -435,6 +436,7 @@ class ToolsMonsterParser:
         s = re.sub(r'\{@h\}', r'*Hit* ', s)
         s = re.sub(r'\{@damage (.+?)\}', r'\1', s)
         s = re.sub(r'\{@hom(.*?)\}', r'*Homing*', s)
+        s = re.sub(r'\{@chance (\d+).*?\}', r'\1 %', s)
 
         s = re.sub(r'\{@dc (\d+?)\}', r'DC\1', s)
 
@@ -445,6 +447,9 @@ class ToolsMonsterParser:
 
         if s.__contains__('{@'):
             raise ValueError(f'String has not been cleaned: {s}')
+
+        # Remove exceptions that don't make sense to be linked
+        s = s.replace('[[d20 test]]', 'saving throw, ability check or attack roll')
 
         return s
 
@@ -466,14 +471,9 @@ class ToolsMonsterParser:
         if not res:
             return s
 
-        linkName = res.group(1).split('|')[0]
-        names = linkName.split('|')
+        names = res.group(1).split('|')
 
-        if (re.match(r'\d', names[-1])) or (not re.match(r'\s', names[-1])):
-            s = re.sub(regexPattern, f'[[{names[0]}]]', s)
-            return s
-
-        s = re.sub(regexPattern, f'[[{names[-1]}#{names[0]}|{names[0]}]]', s)
+        s = re.sub(regexPattern, f'[[{names[0]}#{names[-1]}|{names[-1]}]]', s)
 
         return s
 
@@ -484,12 +484,16 @@ class ToolsMonsterParser:
 
 
     @classmethod
-    def parseLairActions(cls, actions : list | None) -> str:
-        if actions is None:
+    def parseLairActions(cls, data: dict[str, list], legendaryType : str) -> str:
+        if data.get(legendaryType) is None:
             return ''
-
-        lairActionString = ''
-        for action in actions:
+        if legendaryType == 'lairActions':
+            lairActionString = '## Lair Actions\n'
+        elif legendaryType == 'regionalEffects':
+            lairActionString = '## Regional Effects\n'
+        else:
+            raise ValueError(f'Lair action not supported. Must be lairActions or regionalEffects: {legendaryType}')
+        for action in data[legendaryType]:
             if isinstance(action, str):
                 lairActionString += f'{action}\n'
             elif isinstance(action, dict):
@@ -533,3 +537,8 @@ class ToolsMonsterParser:
             if isinstance(value, str):
                 s += f'{split}{value}\n'
         return s
+    
+if __name__ == '__main__':
+    s0 = "You have {@quickref Advantage and Disadvantage|PHB|2|0|advantage} on"
+    tmp = ToolsMonsterParser.getLinkSection(s0,r'\{@quickref (.+?)\}')
+    print(s0, '\n', tmp)

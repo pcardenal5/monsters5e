@@ -46,12 +46,31 @@ class ActionTrait():
             self.text = '\n'.join([t for t in self.text if t is not None])
         self.text.replace('•', '- ')
         self.text = self.text.replace('ft.', 'ft')
+        # Before replacint the monster's name by "the creature" we searhc for all existing links.
+        # They are replaced by link0, link1, ..., linkN so as not to replace them with "the creature"
+        #  and create false links. They are later replaced back
+        linksInString = re.findall(r'(\[\[.+?\]\])',self.text)
+        if not linksInString:
+            self._replaceNameByCreature_()
+            return 
+        # Get unique elements
+        linksInString = list(set(linksInString))
+        for i in range(len(linksInString)):
+            self.text = self.text.replace(linksInString[i], f'link{0}')
+
+        self._replaceNameByCreature_()
+        for i in range(len(linksInString)):
+            self.text = self.text.replace(f'link{0}', linksInString[i])
+
+
+
+    def _replaceNameByCreature_(self):
+
         self.text = re.sub(re.escape(self.monsterName), 'the creature', self.text, flags = re.IGNORECASE)
         self.text = re.sub(re.escape(self.monsterName.split(' ')[-1]), 'the creature', self.text, flags = re.IGNORECASE)
-        self.text = re.sub(re.escape(self.monsterName.split(' ')[0]), 'the creature', self.text, flags = re.IGNORECASE)
-        self.text = self.text.replace(' the the ', ' the ').replace('The the ', 'The ')
+        self.text = re.sub(r'([^\w])(?:the )+', r'\1 the ', self.text, flags = re.IGNORECASE)
+        self.text = re.sub(r'\s+', ' ', self.text)
         self.text = '. '.join(i.strip().capitalize() for i in self.text.split('. '))
-
 
 
 
