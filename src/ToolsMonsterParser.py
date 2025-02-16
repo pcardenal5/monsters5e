@@ -467,13 +467,24 @@ class ToolsMonsterParser:
 
     @staticmethod
     def getLinkSection(s : str, regexPattern : str) -> str:
-        res = re.compile(regexPattern).search(s)
-        if not res:
-            return s
+        '''
+        Replaces references in the form
+        {@refName str1|.|.|str2} -> [[str1#str2|str2]]
+        '''
+        # Input regex pattern is enveloped in parentheses so that 
+        # the findall returns a list[tuple[regexPattern,match]]
+        # This makes it possible to replace all the references in
+        # the string iteratively        
+        for res in re.compile('(' + regexPattern + ')').findall(s):
+            if not res:
+                return s
+            names = res[1].split('|')
 
-        names = res.group(1).split('|')
-
-        s = re.sub(regexPattern, f'[[{names[0]}#{names[-1]}|{names[-1]}]]', s)
+            # Do not replace chapters if they are numbers
+            if re.search(r'\d', names[-1]):
+                s = s.replace(res[0], f'[[{names[0]}]]')
+            else:
+                s = s.replace(res[0], f'[[{names[0]}#{names[-1]}|{names[-1]}]]')
 
         return s
 
@@ -539,6 +550,6 @@ class ToolsMonsterParser:
         return s
     
 if __name__ == '__main__':
-    s0 = "You have {@quickref Advantage and Disadvantage|PHB|2|0|advantage} on"
+    s0 = "Pike has {@quickref Advantage and Disadvantage|PHB|2|0|advantage} on Intelligence, Wisdom, and Charisma {@quickref saving throws|PHB|2|1} against magic."
     tmp = ToolsMonsterParser.getLinkSection(s0,r'\{@quickref (.+?)\}')
     print(s0, '\n', tmp)

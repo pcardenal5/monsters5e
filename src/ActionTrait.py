@@ -14,7 +14,8 @@ class ActionTrait():
         self.actionTraitType = actionTraitType
         self.monsterName = monsterName
         self.name = self.data.get('name', 'None')
-        self.name = self.name.replace('[[resting]]', 'rest')
+        self.name = re.sub(r'\[\[rest.+?#.+?\|(.+?)\]\]', r'\1', self.name)
+        self.name = re.sub(r'\[\[(.+?)\]\]', r'\1', self.name)
 
         self.mainOutputFolder = outputFolder
 
@@ -54,13 +55,15 @@ class ActionTrait():
             self._replaceNameByCreature_()
             return 
         # Get unique elements
-        linksInString = list(set(linksInString))
-        for i in range(len(linksInString)):
-            self.text = self.text.replace(linksInString[i], f'link{0}')
+        used = set()
+        unique = [x for x in linksInString if x not in used and (used.add(x) or True)]
+
+        for i in range(len(unique)):
+            self.text = self.text.replace(linksInString[i], f'link{i}')
 
         self._replaceNameByCreature_()
         for i in range(len(linksInString)):
-            self.text = self.text.replace(f'link{0}', linksInString[i])
+            self.text = self.text.replace(f'link{i}', linksInString[i])
 
 
 
