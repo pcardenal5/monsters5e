@@ -31,7 +31,7 @@ class ToolsMonsterParser:
 
         for monster in data:
             # Skip monsters that are copies of other creatures
-            # TODO: consider "Edge" case 
+            # TODO: consider "Edge" case
             if monster.get('_copy') is not None:
                 continue
             monsterData = self.adaptToMonster(self.sanitizeData(monster)) # type:ignore
@@ -45,7 +45,7 @@ class ToolsMonsterParser:
                 outputFile.write(mon.generateText())
 
 
-    def readLegendaryGroupData(self, file : str): 
+    def readLegendaryGroupData(self, file : str):
 
         with open(os.path.join(self.dataPath, file), 'r') as inputFile:
             data : list[dict]= json.load(inputFile)['legendaryGroup']
@@ -67,7 +67,7 @@ class ToolsMonsterParser:
 
 
     def adaptToMonster(self, data: dict)-> dict:
-        # Here we adapt the data from the json to the 
+        # Here we adapt the data from the json to the
         # format the Monster class expects
         # Thus, we only change the values that actually
         # need to change
@@ -144,7 +144,7 @@ class ToolsMonsterParser:
                         subtype = tag
                     elif isinstance(tag, list):
                         subtype = ', '.join(tag)
-                    elif isinstance(tag, dict):            
+                    elif isinstance(tag, dict):
                         subtype = f'{tag.get('prefix')} {tag.get('tag')}'.strip()
                     else:
                         subtype = ''
@@ -190,7 +190,7 @@ class ToolsMonsterParser:
             case _:
                 alignment2 = 'Unknown'
 
-        return alignment1 + ' ' + alignment2 
+        return alignment1 + ' ' + alignment2
 
 
     @staticmethod
@@ -202,7 +202,7 @@ class ToolsMonsterParser:
             if isinstance(element, int):
                 acStr += str(element)
                 if len(ac) == 1:
-                    return acStr 
+                    return acStr
 
             if isinstance(element, dict):
                 for key, value in element.items():
@@ -255,10 +255,10 @@ class ToolsMonsterParser:
             if conditionitem.get('special'):
                 return f'{conditionitem.get('special')}'
             if conditionitem.get('preNote'):
-                conditionStr += f'{conditionitem.get('preNote')}'
-            conditionStr += ', '.join([cls.parseConditionElement(i, conditionName) for i in conditionitem[conditionName]]) 
+                conditionStr += f' {conditionitem.get('preNote')}'
+            conditionStr += ', '.join([cls.parseConditionElement(i, conditionName) for i in conditionitem[conditionName]])
             if conditionitem.get('note'):
-                conditionStr += f'{conditionitem.get('note')}'
+                conditionStr += f' {conditionitem.get('note')}'
             return conditionStr
 
         raise TypeError(f'Contition data type not considered ({type(conditionitem)}): {conditionitem}')
@@ -292,16 +292,42 @@ class ToolsMonsterParser:
         raise TypeError(f'Senses type not considered {type(senses)}: {senses}')
 
 
-    @staticmethod
-    def parseSpeed(speed: dict | str | None) -> str:
+    @classmethod
+    def parseSpeed(cls, speed: dict | str | list | int | None) -> str:
         if speed is None:
             return ''
-        
+
+        if isinstance(speed, int):
+            return f'{speed} ft'
+
         if isinstance(speed, str):
-            return speed
-        
+            return f'{speed}'
+
         if isinstance(speed, dict):
-            return ', '.join(f'{key} {value} ft' for key, value in speed.items())
+            s = ''
+            for key, value in speed.items():
+                keyLower = key.lower()
+                if keyLower in ['walk', 'hover', 'fly', 'swim', 'climb', 'burrow']:
+                    s += f' {key} {cls.parseSpeed(value)}'
+                elif keyLower == 'number' or keyLower == 'amount':
+                    s += f' {cls.parseSpeed(value)} '
+                elif keyLower in ['condition', 'note']:
+                    s += f' ({value})'
+                elif keyLower == 'canhover' and value:
+                    s += '(hover)'
+                elif keyLower == 'alternate':
+                    s += cls.parseSpeed(value)
+                elif keyLower in ['choose', 'from']:
+                    s += f'{keyLower.title()} {cls.parseSpeed(value)}'
+                else:
+                    raise ValueError(f'Speed key not considered: {key}: {value}')
+                s = re.sub(r'\s+', ' ', s)
+
+            return s
+
+        if isinstance(speed, list):
+            return ', '.join(f'{cls.parseSpeed(value)}' for value in speed)
+
 
         raise TypeError(f'Type of speed not considered {type(speed)}: {speed}')
 
@@ -310,10 +336,10 @@ class ToolsMonsterParser:
     def parseSkills(skills: dict | str | None) -> str:
         if skills is None:
             return ''
-        
+
         if isinstance(skills, str):
             return skills
-        
+
         if isinstance(skills, dict):
             return ', '.join(f'{key} {value}' for key, value in skills.items())
 
@@ -324,10 +350,10 @@ class ToolsMonsterParser:
     def parseLanguages(language: list | str | None) -> str:
         if language is None:
             return ''
-        
+
         if isinstance(language, str):
             return language
-        
+
         if isinstance(language, list):
             return ', '.join(language)
 
@@ -383,7 +409,7 @@ class ToolsMonsterParser:
         s = re.sub(r'\{@atk ms\}', r'melee spell attack', s)
         s = re.sub(r'\{@atk rs\}', r'ranged spell attack', s)
         s = re.sub(r'\{@atk ms,rs\}', r'melee, ranged spell attack', s)
-        
+
         s = re.sub(r'\{@actSaveFail\}', r'on a failure', s)
         s = re.sub(r'\{@actsavefail\}', r'on a failure', s)
         s = re.sub(re.escape('{@actsavesuccess}'), r'on a success', s)
@@ -407,13 +433,13 @@ class ToolsMonsterParser:
         s = cls.getLink(s, r'\{@creature (.+?)\}')
         s = cls.getLink(s, r'\{@filter (.+?)\}')
         s = cls.getLink(s, r'\{@status (.+?)\}')
-        s = cls.getLink(s, r'\{@variantrule (.+?)\}')   
+        s = cls.getLink(s, r'\{@variantrule (.+?)\}')
         s = cls.getLink(s, r'\{@condition (.+?)\}')
         s = cls.getLink(s, r'\{@deity (.+?)\}',)
         s = cls.getLink(s, r'\{@table (.+?)\}')
 
         s = re.sub(r'\{@b (.+?)}', r'**\1**', s)
-        s = re.sub(r'\{@i (.+?)\}', r'_\1_', s)        
+        s = re.sub(r'\{@i (.+?)\}', r'_\1_', s)
 
 
         s = cls.getLinkSection(s,r'\{@book (.+?)\}',)
@@ -421,11 +447,11 @@ class ToolsMonsterParser:
         s = cls.getLinkSection(s,r'\{@adventure (.+?)\}')
         s = cls.getLinkSection(s,r'\{@action (.+?)\}')
 
-        
+
 
         s = re.sub(r'\{@sense (.+?)\}', r'[[\1]]', s)
 
-        
+
 
 
         s = re.sub(r'\{@hit -(\d+?)\}', r'-\1', s)
@@ -471,10 +497,10 @@ class ToolsMonsterParser:
         Replaces references in the form
         {@refName str1|.|.|str2} -> [[str1#str2|str2]]
         '''
-        # Input regex pattern is enveloped in parentheses so that 
+        # Input regex pattern is enveloped in parentheses so that
         # the findall returns a list[tuple[regexPattern,match]]
         # This makes it possible to replace all the references in
-        # the string iteratively        
+        # the string iteratively
         for res in re.compile('(' + regexPattern + ')').findall(s):
             if not res:
                 return s
@@ -518,10 +544,10 @@ class ToolsMonsterParser:
 
         return lairActionString
 
-            
+
     @staticmethod
     def parseListTypeDict(d : dict, key : str) -> str:
-        # Assume the dictionary already has a 
+        # Assume the dictionary already has a
         #   "type" : "list"
         # key: value pair
         s = ''
@@ -539,7 +565,7 @@ class ToolsMonsterParser:
                 elif value.get('items'):
                     for item in value['items']:
                         s += f'\n{split}**{item['name']}**: {item['entry']}'
-                        
+
                 else:
                     if value.get('entries'):
                         s += f'\n{split}'.join(value['entries'])
@@ -548,7 +574,7 @@ class ToolsMonsterParser:
             if isinstance(value, str):
                 s += f'{split}{value}\n'
         return s
-    
+
 if __name__ == '__main__':
     s0 = "Pike has {@quickref Advantage and Disadvantage|PHB|2|0|advantage} on Intelligence, Wisdom, and Charisma {@quickref saving throws|PHB|2|1} against magic."
     tmp = ToolsMonsterParser.getLinkSection(s0,r'\{@quickref (.+?)\}')

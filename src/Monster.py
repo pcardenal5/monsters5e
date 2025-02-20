@@ -8,7 +8,7 @@ class Monster:
     def __init__(self, data : dict[str, str], source : str, outputFolder : str) -> None:
         self.environment = Environment(loader = FileSystemLoader('templates/'))
         self.template = self.environment.get_template('monster.md')
-        
+
         self.data = data
         self.source = source
         self.name = self.data['name'].replace('/','-').replace(':', '').replace('"','').title()
@@ -45,7 +45,7 @@ class Monster:
         self.skill = self.parseSkill(self.data)
         self.senses = self.parseSenses(self.data)
         self.languages = self.parseLanguages(self.data)
-        
+
         self.legendaryGroup = self.data.get('legendaryGroup', '')
         self.parseLegendaryGroup()
 
@@ -54,7 +54,7 @@ class Monster:
         self.immune = self.data.get('immune', '')
         self.conditionImmune = self.data.get('conditionImmune', '')
         self.buildResistances()
-        
+
 
         self.outputFolder = outputFolder
         self.monsterOutputFolder = os.path.join(self.outputFolder, 'ByCR', self.cr.replace('/', '-').replace('l','1').replace('00','0'))
@@ -74,11 +74,11 @@ class Monster:
             return ''
         traitType = type(actionTrait)
         if traitType not in (list, dict):
-            raise NotImplementedError('Type not supported') 
-        
+            raise NotImplementedError('Type not supported')
+
         if traitType == list:
             return '\n'.join([ActionTrait(trait, self.name, self.environment, actionTraitType, self.outputFolder).completeText for trait in actionTrait]) # type: ignore
-        
+
         return '\n'.join([ActionTrait(actionTrait, self.name, self.environment, actionTraitType, self.outputFolder).completeText])# type: ignore
 
     def buildResistances(self) -> None:
@@ -120,12 +120,12 @@ class Monster:
 
     def parseLegendaryGroup(self) -> None:
         if self.legendaryGroup == '':
-            return 
+            return
         self.legendaryGroup = f'![[Legendary Group {self.legendaryGroup['name']}_{self.legendaryGroup['source']}|Legendary Group {self.legendaryGroup['name']}]]' #type: ignore
         return
 
-    
-    
+
+
     @staticmethod
     def parseSpeed(data : dict) -> str:
         if data.get('speed'):

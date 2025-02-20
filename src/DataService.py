@@ -10,11 +10,11 @@ class DataService():
 
     def generateMonsterList(self) -> None:
         match self.mode:
-            case ModeEnum.XML: 
+            case ModeEnum.XML:
                 xmlMonsterParser = XmlMonsterParser(self.dataPath, self.outputFolder)
                 xmlMonsterParser.generateMonsterList()
             case ModeEnum.TOOLS:
-                    
+
                 toolsMonsterParser = ToolsMonsterParser(self.dataPath, self.outputFolder)
                 toolsMonsterParser.generateMonsterList()
             case _:
